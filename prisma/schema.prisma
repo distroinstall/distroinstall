@@ -1,20 +1,58 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
-  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
-model users {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  image     String
-  createdAt DateTime @default(now())
+// BORRA la tabla "users" del template y pon tu estructura:
+
+model Submission {
+  id              String   @id @default(cuid())
+  token           String?  // QUITAR @unique de aquí
+  userId          String?
+  distroName      String
+  distroVersion   String
+  kernel          String
+  desktopEnv      String
+  cpu             String
+  cpuCores        Int
+  cpuThreads      Int
+  ram             Float
+  gpu             String
+  isVirtual       Boolean
+  usageType       String
+  timestamp       DateTime @default(now())
+  
+  user            User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([distroName])
+  @@index([timestamp])
+  @@index([token])  // Agregar índice para búsquedas rápidas
+  @@index([userId])
+}
+
+model User {
+  id              String       @id @default(cuid())
+  email           String       @unique
+  name            String?
+  username        String?      @unique
+  image           String?
+  submissions     Submission[]
+  badges          Badge[]
+  createdAt       DateTime     @default(now())
+}
+
+model Badge {
+  id              String   @id @default(cuid())
+  userId          String
+  badgeType       String
+  earnedAt        DateTime @default(now())
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, badgeType])
 }
