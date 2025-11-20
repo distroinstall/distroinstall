@@ -1,5 +1,3 @@
-# 1. Crear el nuevo seed
-cat > prisma/seed.ts << 'EOF'
 import { prisma } from '../lib/prisma'
 
 async function main() {
