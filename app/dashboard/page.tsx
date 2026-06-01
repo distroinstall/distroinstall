@@ -174,7 +174,7 @@ export default async function DashboardPage() {
             <code className="text-green-400 text-sm flex-1 break-all">{submissionToken}</code>
           </div>
           <p className="text-gray-500 text-xs mt-3">
-            When the script asks <span className="text-gray-400">"¿Tienes un token de usuario?"</span>, pega este token.
+            When the script asks <span className="text-gray-400">&quot;¿Tienes un token de usuario?&quot;</span>, pega este token.
             También puedes guardarlo en <code className="text-green-400">~/.distroinstall_token</code> para que se cargue automáticamente.
           </p>
         </div>
