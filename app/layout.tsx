@@ -1,11 +1,13 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
+import AuthProvider from '@/components/SessionProvider'
+import { Navbar } from '@/components/Navbar'
 
 export const metadata = {
-  metadataBase: new URL('https://postgres-prisma.vercel.app'),
-  title: 'Vercel Postgres Demo with Prisma',
+  metadataBase: new URL('https://distroinstall.vercel.app'),
+  title: 'DistroInstall — Real stats from real Linux users',
   description:
-    'A simple Next.js app with Vercel Postgres as the database and Prisma as the ORM',
+    'Submit your Linux setup and see how it compares with the community. Real hardware stats, distro rankings, and more.',
 }
 
 const inter = Inter({
@@ -14,14 +16,15 @@ const inter = Inter({
   display: 'swap',
 })
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.variable}>{children}</body>
+      <body className={inter.variable}>
+        <AuthProvider>
+          <Navbar />
+          <div className="pt-14">{children}</div>
+        </AuthProvider>
+      </body>
     </html>
   )
 }
