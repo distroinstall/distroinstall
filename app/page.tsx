@@ -120,11 +120,11 @@ export default async function Home({
   const isFiltered = Object.keys(filters).length > 0
 
   const usageLabels: Record<string, string> = {
-    desktop: 'Escritorio/Personal',
-    programming: 'Programación',
+    desktop: 'Desktop/Personal',
+    programming: 'Programming',
     gaming: 'Gaming',
-    server: 'Servidor',
-    other: 'Otro',
+    server: 'Server',
+    other: 'Other',
   }
 
   return (

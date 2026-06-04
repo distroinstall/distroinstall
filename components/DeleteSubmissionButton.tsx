@@ -18,13 +18,13 @@ export function DeleteSubmissionButton({ id }: { id: string }) {
   if (confirming) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-400">¿Seguro?</span>
+        <span className="text-xs text-gray-400">Sure?</span>
         <button
           onClick={handleDelete}
           disabled={loading}
           className="text-xs px-2 py-1 bg-red-500/20 text-red-400 hover:bg-red-500/40 rounded transition-colors disabled:opacity-50"
         >
-          {loading ? '...' : 'Sí, borrar'}
+          {loading ? '...' : 'Delete'}
         </button>
         <button
           onClick={() => setConfirming(false)}

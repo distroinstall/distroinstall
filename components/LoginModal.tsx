@@ -49,9 +49,9 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
 
     setLoading(false)
     if (result?.error === 'email_not_verified') {
-      setError('Verifica tu email antes de entrar. Revisa tu bandeja de entrada.')
+      setError('Please verify your email before signing in. Check your inbox.')
     } else if (result?.error) {
-      setError('Email o contraseña incorrectos')
+      setError('Incorrect email or password')
     } else {
       onClose()
       router.push('/dashboard')

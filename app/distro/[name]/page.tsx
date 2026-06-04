@@ -5,11 +5,11 @@ import { ArrowLeft, Users, HardDrive, Cpu, Database } from 'lucide-react'
 import { HorizontalBarChart, DesktopPieChart, UsagePieChart } from '@/components/Charts'
 
 const usageLabels: Record<string, string> = {
-  desktop: 'Escritorio/Personal',
-  programming: 'Programación',
+  desktop: 'Desktop/Personal',
+  programming: 'Programming',
   gaming: 'Gaming',
-  server: 'Servidor',
-  other: 'Otro',
+  server: 'Server',
+  other: 'Other',
 }
 
 async function getDistroStats(name: string) {

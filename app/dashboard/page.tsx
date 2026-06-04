@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { DeleteSubmissionButton } from '@/components/DeleteSubmissionButton'
 import { ClaimTokenForm } from '@/components/ClaimTokenForm'
+import { CompareStats } from '@/components/CompareStats'
 
 import { nanoid } from 'nanoid'
 
@@ -23,8 +24,35 @@ async function getUserSubmissions(userId: string) {
   })
 }
 
+async function getCompareData(latest: { ram: number; cpuCores: number; distroName: string }) {
+  const [ramBelow, cpuBelow, total, distroRanking, avgStats] = await Promise.all([
+    prisma.submission.count({ where: { ram: { lt: latest.ram } } }),
+    prisma.submission.count({ where: { cpuCores: { lt: latest.cpuCores } } }),
+    prisma.submission.count(),
+    prisma.submission.groupBy({
+      by: ['distroName'],
+      _count: { distroName: true },
+      orderBy: { _count: { distroName: 'desc' } },
+    }),
+    prisma.submission.aggregate({
+      _avg: { ram: true, cpuCores: true },
+    }),
+  ])
+
+  const distroRank = distroRanking.findIndex(d => d.distroName === latest.distroName) + 1
+
+  return {
+    ramPercentile: total > 0 ? (ramBelow / total) * 100 : 0,
+    cpuPercentile: total > 0 ? (cpuBelow / total) * 100 : 0,
+    distroRank: distroRank || distroRanking.length,
+    totalDistros: distroRanking.length,
+    avgRam: avgStats._avg.ram ?? 0,
+    avgCpuCores: avgStats._avg.cpuCores ?? 0,
+  }
+}
+
 const usageLabels: Record<string, string> = {
-  desktop: 'Desktop',
+  desktop: 'Desktop/Personal',
   programming: 'Programming',
   gaming: 'Gaming',
   server: 'Server',
@@ -39,6 +67,9 @@ export default async function DashboardPage() {
     getUserSubmissions(session.user.id),
     getOrCreateSubmissionToken(session.user.id),
   ])
+
+  const latest = submissions[0]
+  const compareData = latest ? await getCompareData(latest) : null
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -93,6 +124,24 @@ export default async function DashboardPage() {
             </p>
           </div>
         </div>
+
+        {/* Comparador */}
+        {latest && compareData && (
+          <CompareStats
+            ram={latest.ram}
+            cpuCores={latest.cpuCores}
+            cpuThreads={latest.cpuThreads}
+            gpu={latest.gpu}
+            distroName={latest.distroName}
+            usageType={latest.usageType}
+            ramPercentile={compareData.ramPercentile}
+            cpuPercentile={compareData.cpuPercentile}
+            distroRank={compareData.distroRank}
+            totalDistros={compareData.totalDistros}
+            avgRam={compareData.avgRam}
+            avgCpuCores={compareData.avgCpuCores}
+          />
+        )}
 
         {/* Submissions table */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
@@ -174,8 +223,8 @@ export default async function DashboardPage() {
             <code className="text-green-400 text-sm flex-1 break-all">{submissionToken}</code>
           </div>
           <p className="text-gray-500 text-xs mt-3">
-            When the script asks <span className="text-gray-400">&quot;¿Tienes un token de usuario?&quot;</span>, pega este token.
-            También puedes guardarlo en <code className="text-green-400">~/.distroinstall_token</code> para que se cargue automáticamente.
+            When the script asks for a token, paste this one.
+            You can also save it to <code className="text-green-400">~/.distroinstall_token</code> so it loads automatically.
           </p>
         </div>
 

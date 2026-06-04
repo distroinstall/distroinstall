@@ -13,11 +13,11 @@ async function getProfileData(token: string) {
 }
 
 const usageLabels: Record<string, string> = {
-  desktop: 'Escritorio/Personal',
-  programming: 'Programación',
+  desktop: 'Desktop/Personal',
+  programming: 'Programming',
   gaming: 'Gaming',
-  server: 'Servidor',
-  other: 'Otro',
+  server: 'Server',
+  other: 'Other',
 }
 
 export default async function ProfilePage({ params }: { params: { token: string } }) {
