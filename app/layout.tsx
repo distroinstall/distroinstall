@@ -23,21 +23,21 @@ const inter = Inter({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.variable}>
+      <body className={`${inter.variable} overflow-x-hidden`}>
         <AuthProvider>
           <Navbar />
           <div className="pt-14">{children}</div>
           <footer className="border-t border-white/10 bg-slate-900/80 backdrop-blur-lg">
-            <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+            <div className="container mx-auto px-4 py-5 flex flex-col items-center gap-4 text-center sm:h-14 sm:py-0 sm:flex-row sm:justify-between sm:text-left">
               <Link href="/" className="flex items-center gap-2 text-white font-bold text-lg">
                 <Logo size={24} />
                 DistroInstall
               </Link>
-              <div className="flex items-center gap-6 text-sm">
+              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
                 <Link href="/how-it-works" className="text-gray-400 hover:text-white transition-colors">How it works</Link>
                 <Link href="/compare" className="text-gray-400 hover:text-white transition-colors">Compare</Link>
                 <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">Contact</Link>
-                <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</Link>
+                <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy</Link>
                 <a
                   href={GITHUB_URL}
                   target="_blank"

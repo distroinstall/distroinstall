@@ -53,7 +53,7 @@ export default async function ProfilePage({ params }: { params: { token: string 
 
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-5xl font-bold text-white mb-2">
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-2 break-words">
             {userWithBadges?.name ? `${userWithBadges.name}'s Profile` : 'System Profile'}
           </h1>
           <p className="text-gray-400 text-sm font-mono">

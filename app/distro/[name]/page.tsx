@@ -131,7 +131,7 @@ export default async function DistroPage({ params }: { params: { name: string } 
             <ArrowLeft size={18} />
             Back to all distros
           </Link>
-          <h1 className="text-6xl font-bold text-white mb-2">{distroName}</h1>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-2 break-words">{distroName}</h1>
           <p className="text-xl text-gray-400">
             {stats.totalSubmissions} submission{stats.totalSubmissions !== 1 ? 's' : ''} from the community
           </p>

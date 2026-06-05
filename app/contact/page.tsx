@@ -19,7 +19,7 @@ export default function ContactPage() {
           Back to home
         </Link>
 
-        <h1 className="text-5xl font-bold text-white mb-3">Contact</h1>
+        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3">Contact</h1>
         <p className="text-xl text-gray-300 mb-10">
           Questions, feedback, bug reports or data requests — we&apos;d love to hear from you.
         </p>

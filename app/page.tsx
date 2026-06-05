@@ -173,11 +173,11 @@ export default async function Home({
 
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-7xl font-bold text-white mb-4 flex items-center justify-center gap-4">
-            <Logo size={64} />
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold text-white mb-4 flex items-center justify-center gap-3 md:gap-4">
+            <Logo size={64} className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 shrink-0" />
             DistroInstall
           </h1>
-          <p className="text-2xl text-gray-300 mb-3">Real stats from real Linux users</p>
+          <p className="text-xl sm:text-2xl text-gray-300 mb-3">Real stats from real Linux users</p>
           <p className="text-gray-400 max-w-2xl mx-auto mb-8">
             Run one command to share your setup anonymously, then see how your distro and
             hardware stack up against the community.

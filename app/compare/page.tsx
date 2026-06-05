@@ -134,7 +134,7 @@ export default async function ComparePage({
             <ArrowLeft size={18} />
             Back to all distros
           </Link>
-          <h1 className="text-5xl font-bold text-white mb-2">⚖️ Compare Distros</h1>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2">⚖️ Compare Distros</h1>
           <p className="text-gray-400 text-lg">Side-by-side hardware & usage stats from real Linux users</p>
         </div>
 

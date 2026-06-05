@@ -41,7 +41,7 @@ export default function HowItWorksPage() {
           Back to home
         </Link>
 
-        <h1 className="text-5xl font-bold text-white mb-3">How it works</h1>
+        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3">How it works</h1>
         <p className="text-xl text-gray-300 mb-12">
           DistroInstall collects anonymous hardware and software stats from real Linux
           users — so we can all see what people actually run. Here&apos;s exactly how.
