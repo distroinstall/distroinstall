@@ -49,8 +49,12 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
   callbacks: {
-    jwt: ({ token, user }) => {
+    jwt: ({ token, user, trigger, session }) => {
       if (user) token.id = user.id
+      // Reflect profile edits (e.g. display name) into the token without re-login.
+      if (trigger === 'update' && typeof session?.name === 'string') {
+        token.name = session.name
+      }
       return token
     },
     session: ({ session, token }) => ({

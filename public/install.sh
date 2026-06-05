@@ -28,7 +28,7 @@ TMP=$(mktemp /tmp/distroinstall_XXXXXX.py)
 trap "rm -f $TMP" EXIT
 
 echo "⬇️  Fetching script..."
-curl -sSL https://distroinstall.vercel.app/distroinstall.py -o "$TMP"
+curl -sSL https://distroinstall.com/distroinstall.py -o "$TMP"
 
 echo ""
 python3 "$TMP"

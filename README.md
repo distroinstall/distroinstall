@@ -1,57 +1,116 @@
+<p align="center">
+  <img src="public/logo.svg" width="72" alt="DistroInstall logo" />
+</p>
+
+<h1 align="center">DistroInstall</h1>
+
+<p align="center"><strong>Real stats from real Linux users.</strong></p>
+
+DistroInstall is a community-driven platform that collects anonymous hardware and
+software statistics from Linux users. Run a small script, and your distro, desktop,
+CPU, RAM and GPU are added to a public dataset so everyone can see what people
+*actually* run — and how their own setup compares.
+
+🌐 **Live:** [distroinstall.com](https://distroinstall.com)
+
 ---
-name: Vercel Postgres + Prisma Next.js Starter
-slug: postgres-prisma
-description: Simple Next.js template that uses Vercel Postgres as the database and Prisma as the ORM.
-framework: Next.js
-useCase: Starter
-css: Tailwind
-database: Vercel Postgres
-deployUrl: https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fstorage%2Fpostgres-prisma&project-name=postgres-prisma&repository-name=postgres-prisma&demo-title=Vercel%20Postgres%20%2B%20Prisma%20Next.js%20Starter&demo-description=Simple%20Next.js%20template%20that%20uses%20Vercel%20Postgres%20as%20the%20database%20and%20Prisma%20as%20the%20ORM.&demo-url=https%3A%2F%2Fpostgres-prisma.vercel.app%2F&demo-image=https%3A%2F%2Fpostgres-prisma.vercel.app%2Fopengraph-image.png&stores=%5B%7B"type"%3A"postgres"%7D%5D
-demoUrl: https://postgres-prisma.vercel.app/
-relatedTemplates:
-  - postgres-starter
-  - postgres-kysely
-  - postgres-sveltekit
----
 
-# Vercel Postgres + Prisma Next.js Starter
+## Features
 
-Simple Next.js template that uses [Vercel Postgres](https://vercel.com/postgres) as the database and [Prisma](https://prisma.io/) as the ORM.
+- 📊 **Community dashboard** — top distributions, desktop environments, usage types, hardware averages and 30-day growth.
+- 🔥 **Trending distros** — week-over-week movers.
+- 🆚 **Compare** — put any two distributions side by side.
+- 🧑‍💻 **Per-distro pages** — versions, kernels, desktops, GPUs, plus a description and link to the official site.
+- 🏅 **Badges & profiles** — earn badges and get a shareable public profile.
+- 🔑 **Accounts** — link submissions to your account, export your data (JSON) or delete it (GDPR).
+- 🔒 **Privacy-first** — no IP addresses, no tracking cookies, no ads. See [/privacy](https://distroinstall.com/privacy).
 
-## Demo
-
-https://postgres-prisma.vercel.app/
-
-## How to Use
-
-You can choose from one of the following two methods to use this repository:
-
-### One-Click Deploy
-
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=vercel-examples):
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fstorage%2Fpostgres-prisma&project-name=postgres-prisma&repository-name=postgres-prisma&demo-title=Vercel%20Postgres%20%2B%20Prisma%20Next.js%20Starter&demo-description=Simple%20Next.js%20template%20that%20uses%20Vercel%20Postgres%20as%20the%20database%20and%20Prisma%20as%20the%20ORM.&demo-url=https%3A%2F%2Fpostgres-prisma.vercel.app%2F&demo-image=https%3A%2F%2Fpostgres-prisma.vercel.app%2Fopengraph-image.png&stores=%5B%7B"type"%3A"postgres"%7D%5D)
-
-### Clone and Deploy
-
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [pnpm](https://pnpm.io/installation) to bootstrap the example:
+## How it works
 
 ```bash
-pnpm create next-app --example https://github.com/vercel/examples/tree/main/storage/postgres-prisma
+curl -sSL https://distroinstall.com/install.sh | bash
 ```
 
-Once that's done, copy the .env.example file in this directory to .env.local (which will be ignored by Git):
+The script reads your system specs locally and submits a summary. You can also
+download and inspect [`distroinstall.py`](https://distroinstall.com/distroinstall.py)
+and run it yourself. See [how it works](https://distroinstall.com/how-it-works)
+for exactly what is (and isn't) collected.
+
+## Tech stack
+
+- **Next.js 14** (App Router) + **React 18** + **TypeScript**
+- **Tailwind CSS** (dark glassmorphism theme)
+- **Prisma** ORM + **PostgreSQL** (Neon)
+- **NextAuth** (Google, GitHub, email/password)
+- **Recharts** for charts
+- **Resend** for transactional email
+- Deployed on **Vercel**
+
+## Local development
+
+### 1. Install dependencies
 
 ```bash
-cp .env.example .env.local
+npm install
 ```
 
-Then open `.env.local` and set the environment variables to match the ones in your Vercel Storage Dashboard.
+### 2. Environment variables
 
-Next, run Next.js in development mode:
+Copy the example and fill it in:
 
 ```bash
-pnpm dev
+cp .env.example .env
 ```
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=vercel-examples) ([Documentation](https://nextjs.org/docs/deployment)).
+| Variable | Purpose |
+| --- | --- |
+| `POSTGRES_PRISMA_URL` | Pooled Postgres connection string (Prisma) |
+| `POSTGRES_URL_NON_POOLING` | Direct connection (migrations / `db push`) |
+| `NEXTAUTH_URL` | App URL (`http://localhost:3000` in dev) |
+| `NEXTAUTH_SECRET` | Random secret (`openssl rand -base64 32`) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth |
+| `GITHUB_ID` / `GITHUB_SECRET` | GitHub OAuth |
+| `RESEND_API_KEY` | Resend API key for verification emails |
+
+> ⚠️ Use a **separate database for local development**. The dev and production
+> databases must not be shared, since the seed script inserts fake data.
+
+### 3. Set up the database
+
+```bash
+npx prisma db push     # create the schema
+npx prisma db seed     # (optional) load ~110 fake submissions for local testing
+```
+
+### 4. Run
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Project structure
+
+```
+app/            Next.js routes (pages + API)
+  api/          submit, register, verify, account, export, claim…
+  distro/       per-distribution pages
+  dashboard/    user dashboard
+  compare/      side-by-side comparison
+components/     UI components (charts, navbar, forms…)
+lib/            prisma client, auth, email, badges, distros, rate limiting
+prisma/         schema + seed
+public/         distroinstall.py, install.sh, static assets
+```
+
+## Privacy
+
+DistroInstall collects only anonymous system data and (optionally) account info
+you provide. No IP addresses, file data or tracking. The single session cookie is
+strictly necessary for authentication. Full details in the
+[Privacy Policy](https://distroinstall.com/privacy).
+
+## License
+
+MIT

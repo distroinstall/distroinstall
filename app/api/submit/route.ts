@@ -1,17 +1,52 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { rateLimit, getClientIp } from '@/lib/rateLimit'
+
+// Trim a value to a string and cap its length so a malicious payload can't
+// store megabytes per field.
+function str(value: unknown, max: number, fallback = 'Unknown'): string {
+  if (typeof value !== 'string') return fallback
+  const trimmed = value.trim()
+  if (!trimmed) return fallback
+  return trimmed.slice(0, max)
+}
+
+// Coerce to an integer clamped into a sane range.
+function int(value: unknown, min: number, max: number): number {
+  const n = Math.floor(Number(value))
+  if (!Number.isFinite(n)) return min
+  return Math.min(max, Math.max(min, n))
+}
+
+function float(value: unknown, min: number, max: number): number {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return min
+  return Math.min(max, Math.max(min, n))
+}
+
+const VALID_USAGE = new Set(['desktop', 'programming', 'gaming', 'server', 'other'])
 
 export async function POST(request: Request) {
   try {
+    // Throttle: 8 submissions per IP per 10 minutes.
+    const ip = getClientIp(request)
+    const limit = rateLimit(`submit:${ip}`, 8, 10 * 60 * 1000)
+    if (!limit.ok) {
+      return NextResponse.json(
+        { error: 'Too many submissions. Please slow down and try again later.' },
+        { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } }
+      )
+    }
+
     const data = await request.json()
     const { system_info, token, is_virtual, usage_type } = data
 
-    if (!system_info || !system_info.distro_name) {
+    if (!system_info || typeof system_info !== 'object' || !system_info.distro_name) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
     let userId: string | null = null
-    let submissionToken: string = token ?? `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    let submissionToken: string = token ?? `anon_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
 
     if (token) {
       // Token personal de usuario (empieza por usr_)
@@ -37,21 +72,23 @@ export async function POST(request: Request) {
       }
     }
 
+    const usage = typeof usage_type === 'string' && VALID_USAGE.has(usage_type) ? usage_type : 'other'
+
     const submission = await prisma.submission.create({
       data: {
         token: submissionToken,
         userId,
-        distroName: system_info.distro_name,
-        distroVersion: system_info.distro_version || 'Unknown',
-        kernel: system_info.kernel,
-        desktopEnv: system_info.desktop_environment || 'Unknown',
-        cpu: system_info.cpu || 'Unknown',
-        cpuCores: system_info.cpu_cores || 0,
-        cpuThreads: system_info.cpu_threads || 0,
-        ram: system_info.ram_gb || 0,
-        gpu: system_info.gpu || 'Unknown',
-        isVirtual: is_virtual || false,
-        usageType: usage_type || 'other',
+        distroName: str(system_info.distro_name, 60),
+        distroVersion: str(system_info.distro_version, 40),
+        kernel: str(system_info.kernel, 60),
+        desktopEnv: str(system_info.desktop_environment, 40),
+        cpu: str(system_info.cpu, 120),
+        cpuCores: int(system_info.cpu_cores, 0, 1024),
+        cpuThreads: int(system_info.cpu_threads, 0, 4096),
+        ram: float(system_info.ram_gb, 0, 8192),
+        gpu: str(system_info.gpu, 120),
+        isVirtual: Boolean(is_virtual),
+        usageType: usage,
       },
     })
 
@@ -64,10 +101,7 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error('Error creating submission:', error)
-    return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 

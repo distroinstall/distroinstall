@@ -11,8 +11,8 @@ import subprocess
 import requests
 import os
 
-API_URL = 'https://distroinstall.vercel.app/api/submit'
-BASE_URL = 'https://distroinstall.vercel.app'
+API_URL = 'https://distroinstall.com/api/submit'
+BASE_URL = 'https://distroinstall.com'
 TOKEN_FILE = os.path.expanduser('~/.distroinstall_token')
 
 
@@ -44,6 +44,18 @@ def get_gpu_info():
         return 'Unknown'
 
 
+def get_cpu_model():
+    # platform.processor() is usually empty on Linux; read the real model name.
+    try:
+        with open('/proc/cpuinfo') as f:
+            for line in f:
+                if line.startswith('model name'):
+                    return line.split(':', 1)[1].strip()
+    except Exception:
+        pass
+    return platform.processor() or 'Unknown'
+
+
 def get_system_info():
     return {
         'distro_name': distro.name(),
@@ -52,7 +64,7 @@ def get_system_info():
         'kernel': platform.release(),
         'architecture': platform.machine(),
         'desktop_environment': get_desktop_environment(),
-        'cpu': platform.processor(),
+        'cpu': get_cpu_model(),
         'cpu_cores': psutil.cpu_count(logical=False),
         'cpu_threads': psutil.cpu_count(logical=True),
         'ram_gb': round(psutil.virtual_memory().total / (1024**3), 2),

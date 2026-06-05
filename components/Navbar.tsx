@@ -5,6 +5,9 @@ import { useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { LoginModal } from './LoginModal'
+import { Logo } from './Logo'
+import { GithubIcon } from './GithubIcon'
+import { GITHUB_URL } from '@/lib/utils'
 
 export function Navbar() {
   const { data: session, status } = useSession()
@@ -16,10 +19,33 @@ export function Navbar() {
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
 
           <Link href="/" className="flex items-center gap-2 text-white font-bold text-lg">
-            🐧 DistroInstall
+            <Logo size={26} />
+            DistroInstall
           </Link>
 
           <div className="flex items-center gap-3">
+            <Link href="/how-it-works" className="text-gray-400 hover:text-white text-sm transition-colors hidden sm:block">
+              How it works
+            </Link>
+            <Link href="/compare" className="text-gray-400 hover:text-white text-sm transition-colors hidden sm:block">
+              Compare
+            </Link>
+
+            <Link href="/contact" className="text-gray-400 hover:text-white text-sm transition-colors hidden sm:block">
+              Contact
+            </Link>
+
+            <a
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-white transition-colors hidden sm:block"
+              title="GitHub"
+              aria-label="GitHub"
+            >
+              <GithubIcon size={18} />
+            </a>
+
             {status === 'loading' && (
               <div className="w-8 h-8 rounded-full bg-white/10 animate-pulse" />
             )}
@@ -41,7 +67,11 @@ export function Navbar() {
                 >
                   My Dashboard
                 </Link>
-                <div className="flex items-center gap-2">
+                <Link
+                  href="/settings"
+                  className="flex items-center gap-2 rounded-full hover:bg-white/10 pr-2 py-0.5 transition-colors"
+                  title="Settings"
+                >
                   {session.user.image ? (
                     <Image
                       src={session.user.image}
@@ -58,7 +88,7 @@ export function Navbar() {
                   <span className="text-gray-300 text-sm hidden sm:block">
                     {session.user.name ?? session.user.email}
                   </span>
-                </div>
+                </Link>
                 <button
                   onClick={() => signOut()}
                   className="text-gray-500 hover:text-gray-300 text-sm transition-colors"

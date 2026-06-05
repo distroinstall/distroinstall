@@ -3,6 +3,7 @@
 import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import { Logo } from '@/components/Logo'
 
 function LoginContent() {
   const searchParams = useSearchParams()
@@ -11,7 +12,9 @@ function LoginContent() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
       <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-10 border border-white/20 w-full max-w-sm text-center">
-        <h1 className="text-4xl mb-2">🐧</h1>
+        <div className="flex justify-center mb-3">
+          <Logo size={44} />
+        </div>
         <h2 className="text-2xl font-bold text-white mb-2">Sign in</h2>
         <p className="text-gray-400 text-sm mb-8">
           To access your personal dashboard

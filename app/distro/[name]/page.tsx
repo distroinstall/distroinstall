@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { ArrowLeft, Users, HardDrive, Cpu, Database } from 'lucide-react'
+import { ArrowLeft, Users, HardDrive, Cpu, Database, ExternalLink } from 'lucide-react'
 import { HorizontalBarChart, DesktopPieChart, UsagePieChart } from '@/components/Charts'
+import { getDistroMeta } from '@/lib/distros'
 
 const usageLabels: Record<string, string> = {
   desktop: 'Desktop/Personal',
@@ -115,6 +116,7 @@ export default async function DistroPage({ params }: { params: { name: string } 
 
   const physical = stats.virtualVsPhysical.find(v => !v.isVirtual)?._count.isVirtual ?? 0
   const virtual_ = stats.virtualVsPhysical.find(v => v.isVirtual)?._count.isVirtual ?? 0
+  const meta = getDistroMeta(distroName)
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -129,10 +131,36 @@ export default async function DistroPage({ params }: { params: { name: string } 
             <ArrowLeft size={18} />
             Back to all distros
           </Link>
-          <h1 className="text-6xl font-bold text-white mb-2">🐧 {distroName}</h1>
+          <h1 className="text-6xl font-bold text-white mb-2">{distroName}</h1>
           <p className="text-xl text-gray-400">
             {stats.totalSubmissions} submission{stats.totalSubmissions !== 1 ? 's' : ''} from the community
           </p>
+        </div>
+
+        {/* About this distro */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-10">
+          <div className="flex items-start justify-between gap-4 flex-wrap mb-3">
+            <h2 className="text-2xl font-bold text-white">About {distroName}</h2>
+            {meta?.basedOn && (
+              <span className="text-xs px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30">
+                Based on {meta.basedOn}
+              </span>
+            )}
+          </div>
+          <p className="text-gray-300 leading-relaxed mb-5">
+            {meta
+              ? meta.description
+              : `${distroName} is a community-submitted Linux distribution. We don't have a curated description for it yet.`}
+          </p>
+          <a
+            href={meta ? meta.url : `https://duckduckgo.com/?q=${encodeURIComponent(distroName + ' linux distribution')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg border border-white/20 transition-colors"
+          >
+            <ExternalLink size={15} />
+            {meta ? 'Visit official website' : `Search for ${distroName}`}
+          </a>
         </div>
 
         {/* Summary cards */}

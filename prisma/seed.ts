@@ -97,8 +97,17 @@ function pick<T>(arr: T[]): T {
 
 function randomDate(): Date {
   const now = Date.now()
-  const sixMonthsAgo = now - 180 * 24 * 60 * 60 * 1000
-  return new Date(sixMonthsAgo + Math.random() * (now - sixMonthsAgo))
+  const rand = Math.random()
+  if (rand < 0.30) {
+    // 30% in last 7 days (this week — trending window)
+    return new Date(now - Math.random() * 7 * 24 * 60 * 60 * 1000)
+  } else if (rand < 0.50) {
+    // 20% in 7–14 days ago (prev week — for delta comparison)
+    return new Date(now - (7 + Math.random() * 7) * 24 * 60 * 60 * 1000)
+  } else {
+    // 50% in 14–180 days ago (older history — for growth chart)
+    return new Date(now - (14 + Math.random() * 166) * 24 * 60 * 60 * 1000)
+  }
 }
 
 function buildPool() {

@@ -1,15 +1,24 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { ArrowLeft, Clock, HardDrive, Cpu, Database, Monitor } from 'lucide-react'
+import { ArrowLeft, Clock } from 'lucide-react'
+import { CopyBlock } from '@/components/CopyButton'
+import { BadgeDisplay } from '@/components/BadgeDisplay'
+import { SITE_URL } from '@/lib/utils'
 
 async function getProfileData(token: string) {
-  const submissions = await prisma.submission.findMany({
-    where: { token },
-    orderBy: { timestamp: 'desc' },
-  })
+  const [submissions, userWithBadges] = await Promise.all([
+    prisma.submission.findMany({
+      where: { token },
+      orderBy: { timestamp: 'desc' },
+    }),
+    prisma.user.findUnique({
+      where: { submissionToken: token },
+      select: { name: true, badges: { orderBy: { earnedAt: 'asc' } } },
+    }),
+  ])
   if (submissions.length === 0) return null
-  return submissions
+  return { submissions, userWithBadges }
 }
 
 const usageLabels: Record<string, string> = {
@@ -22,9 +31,10 @@ const usageLabels: Record<string, string> = {
 
 export default async function ProfilePage({ params }: { params: { token: string } }) {
   const token = decodeURIComponent(params.token)
-  const submissions = await getProfileData(token)
-  if (!submissions) notFound()
+  const profile = await getProfileData(token)
+  if (!profile) notFound()
 
+  const { submissions, userWithBadges } = profile
   const latest = submissions[0]
   const shortToken = token.length > 24 ? token.slice(0, 24) + '…' : token
 
@@ -43,7 +53,9 @@ export default async function ProfilePage({ params }: { params: { token: string 
 
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-5xl font-bold text-white mb-2">🐧 My System Profile</h1>
+          <h1 className="text-5xl font-bold text-white mb-2">
+            {userWithBadges?.name ? `${userWithBadges.name}'s Profile` : 'System Profile'}
+          </h1>
           <p className="text-gray-400 text-sm font-mono">
             Token: <span className="text-gray-300">{shortToken}</span>
           </p>
@@ -52,6 +64,14 @@ export default async function ProfilePage({ params }: { params: { token: string 
             First seen {new Date(submissions[submissions.length - 1].timestamp).toLocaleDateString()}
           </p>
         </div>
+
+        {/* Badges (if user is registered) */}
+        {userWithBadges?.badges && userWithBadges.badges.length > 0 && (
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
+            <h2 className="text-2xl font-bold text-white mb-6">🏅 Badges</h2>
+            <BadgeDisplay badges={userWithBadges.badges} />
+          </div>
+        )}
 
         {/* Current setup */}
         <div className="mb-4">
@@ -150,9 +170,9 @@ export default async function ProfilePage({ params }: { params: { token: string 
         <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-lg rounded-2xl p-8 border border-white/20 text-center">
           <h2 className="text-2xl font-bold text-white mb-2">Share your profile</h2>
           <p className="text-gray-400 mb-4">Anyone with this link can see your setup</p>
-          <code className="inline-block bg-black/50 px-4 py-2 rounded-lg text-green-400 text-sm break-all">
-            https://distroinstall.vercel.app/u/{token}
-          </code>
+          <div className="max-w-md mx-auto">
+            <CopyBlock text={`${SITE_URL}/u/${token}`} />
+          </div>
           <p className="text-gray-500 text-xs mt-4">
             Want to update your data?{' '}
             <Link href="/" className="text-blue-400 hover:underline">

@@ -2,10 +2,15 @@ import Link from 'next/link'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { Download, TrendingUp, Users, HardDrive } from 'lucide-react'
-import { HorizontalBarChart, DesktopPieChart, UsagePieChart } from '@/components/Charts'
+import { HorizontalBarChart, DesktopPieChart, UsagePieChart, GrowthLineChart } from '@/components/Charts'
 import { FilterBar } from '@/components/FilterBar'
+import { CopyBlock } from '@/components/CopyButton'
+import { TrendingDistros, type TrendingItem } from '@/components/TrendingDistros'
+import { Logo } from '@/components/Logo'
 
 type GpuByDistro = { distroName: string; gpu: string }
+type GrowthRow = { day: string; count: number }
+type TrendingRow = { distroName: string; this_week: number; prev_week: number }
 
 type Filters = {
   isVirtual?: boolean
@@ -32,6 +37,8 @@ async function getStats(filters: Filters = {}) {
     virtualVsPhysical,
     recentSubmissions,
     topGpuPerDistro,
+    dailyGrowthRaw,
+    trendingRaw,
   ] = await Promise.all([
     prisma.submission.count({ where }),
     prisma.submission.groupBy({
@@ -83,9 +90,40 @@ async function getStats(filters: Filters = {}) {
       ) t
       ORDER BY "distroName", cnt DESC
     `,
+    prisma.$queryRaw<GrowthRow[]>`
+      SELECT
+        TO_CHAR(DATE_TRUNC('day', timestamp), 'Mon DD') AS day,
+        COUNT(*)::int AS count
+      FROM "Submission"
+      WHERE timestamp > NOW() - INTERVAL '30 days'
+      GROUP BY DATE_TRUNC('day', timestamp)
+      ORDER BY DATE_TRUNC('day', timestamp) ASC
+    `,
+    prisma.$queryRaw<TrendingRow[]>`
+      SELECT
+        "distroName",
+        SUM(CASE WHEN timestamp > NOW() - INTERVAL '7 days' THEN 1 ELSE 0 END)::int AS this_week,
+        SUM(CASE WHEN timestamp BETWEEN NOW() - INTERVAL '14 days' AND NOW() - INTERVAL '7 days' THEN 1 ELSE 0 END)::int AS prev_week
+      FROM "Submission"
+      WHERE timestamp > NOW() - INTERVAL '14 days'
+      GROUP BY "distroName"
+      HAVING SUM(CASE WHEN timestamp > NOW() - INTERVAL '7 days' THEN 1 ELSE 0 END) >= 3
+      ORDER BY (
+        SUM(CASE WHEN timestamp > NOW() - INTERVAL '7 days' THEN 1 ELSE 0 END) -
+        SUM(CASE WHEN timestamp BETWEEN NOW() - INTERVAL '14 days' AND NOW() - INTERVAL '7 days' THEN 1 ELSE 0 END)
+      ) DESC
+      LIMIT 6
+    `,
   ])
 
   const gpuMap = new Map(topGpuPerDistro.map(r => [r.distroName, r.gpu]))
+
+  const trending: TrendingItem[] = trendingRaw.map(r => ({
+    distroName: r.distroName,
+    thisWeek: r.this_week,
+    prevWeek: r.prev_week,
+    delta: r.this_week - r.prev_week,
+  }))
 
   return {
     totalSubmissions,
@@ -103,6 +141,8 @@ async function getStats(filters: Filters = {}) {
       avgCpuThreads: s._avg.cpuThreads,
       topGpu: gpuMap.get(s.distroName) ?? 'N/A',
     })),
+    dailyGrowth: dailyGrowthRaw,
+    trending,
   }
 }
 
@@ -133,24 +173,53 @@ export default async function Home({
 
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-7xl font-bold text-white mb-4">🐧 DistroInstall</h1>
-          <p className="text-2xl text-gray-300 mb-8">Real stats from real Linux users</p>
+          <h1 className="text-7xl font-bold text-white mb-4 flex items-center justify-center gap-4">
+            <Logo size={64} />
+            DistroInstall
+          </h1>
+          <p className="text-2xl text-gray-300 mb-3">Real stats from real Linux users</p>
+          <p className="text-gray-400 max-w-2xl mx-auto mb-8">
+            Run one command to share your setup anonymously, then see how your distro and
+            hardware stack up against the community.
+          </p>
+
+          {/* 3 steps */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-8 text-sm">
+            <span className="text-gray-300">
+              <span className="text-purple-400 font-bold">1.</span> Run the script
+            </span>
+            <span className="text-gray-600">→</span>
+            <span className="text-gray-300">
+              <span className="text-purple-400 font-bold">2.</span> See your stats
+            </span>
+            <span className="text-gray-600">→</span>
+            <span className="text-gray-300">
+              <span className="text-purple-400 font-bold">3.</span> Compare &amp; share
+            </span>
+          </div>
+
           <div className="max-w-3xl mx-auto bg-slate-800/50 backdrop-blur-lg rounded-xl p-6 border border-white/10">
             <div className="flex items-center gap-3 mb-3">
               <Download className="text-green-400" size={24} />
               <span className="text-white font-semibold">Submit your system:</span>
             </div>
-            <code className="block bg-black/50 p-4 rounded-lg text-green-400 text-sm overflow-x-auto">
-              curl -sSL https://distroinstall.vercel.app/install.sh | bash
-            </code>
-            <p className="text-gray-400 text-sm mt-3">
-              Or download: <a href="/distroinstall.py" className="text-blue-400 hover:underline">distroinstall.py</a>
+            <CopyBlock text="curl -sSL https://distroinstall.com/install.sh | bash" />
+            <p className="text-gray-400 text-sm mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+              <span>
+                Or download <a href="/distroinstall.py" className="text-blue-400 hover:underline">distroinstall.py</a>
+              </span>
+              <span className="text-gray-600">·</span>
+              <Link href="/how-it-works" className="text-blue-400 hover:underline">
+                What does it collect?
+              </Link>
             </p>
           </div>
         </div>
 
         {/* Filters */}
         <FilterBar />
+
+
 
         {/* Stats row */}
         <div className="grid md:grid-cols-4 gap-6 mb-12">
@@ -199,13 +268,33 @@ export default async function Home({
           </div>
         </div>
 
+        {/* Growth + Trending */}
+        <div className="grid lg:grid-cols-3 gap-8 mb-8">
+          <div className="lg:col-span-2 bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
+            <h2 className="text-2xl font-bold text-white mb-1">📈 Community Growth</h2>
+            <p className="text-gray-400 text-sm mb-6">Submissions over the last 30 days</p>
+            {stats.dailyGrowth.length > 0
+              ? <GrowthLineChart data={stats.dailyGrowth} />
+              : <p className="text-gray-400 text-center py-12">No recent submissions</p>}
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
+            <h2 className="text-2xl font-bold text-white mb-1">🔥 Trending This Week</h2>
+            <p className="text-gray-400 text-sm mb-6">vs. last week · min. 3 submissions</p>
+            <TrendingDistros data={stats.trending} />
+          </div>
+        </div>
+
         {/* Charts grid */}
         <div className="grid lg:grid-cols-2 gap-8 mb-8">
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
             <h2 className="text-3xl font-bold text-white mb-6">🏆 Top Distributions</h2>
             {stats.totalSubmissions > 0
-              ? <HorizontalBarChart data={stats.topDistros.map(d => ({ label: d.distroName, count: d._count.distroName }))} />
+              ? <HorizontalBarChart linkBase="/distro" data={stats.topDistros.map(d => ({ label: d.distroName, count: d._count.distroName }))} />
               : <p className="text-gray-400 text-center py-16">No data for this filter</p>}
+            {stats.totalSubmissions > 0 && (
+              <p className="text-gray-500 text-xs mt-3 text-center">Click a bar to see that distro&apos;s page</p>
+            )}
           </div>
 
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
@@ -233,7 +322,13 @@ export default async function Home({
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <p className="text-white font-bold text-lg">
-                        {sub.distroName} {sub.distroVersion}
+                        <Link
+                          href={`/distro/${encodeURIComponent(sub.distroName)}`}
+                          className="hover:text-blue-400 transition-colors"
+                        >
+                          {sub.distroName}
+                        </Link>{' '}
+                        {sub.distroVersion}
                       </p>
                       <p className="text-gray-400 text-sm">
                         {sub.desktopEnv} • Kernel {sub.kernel}
@@ -314,9 +409,7 @@ export default async function Home({
             <p className="text-xl text-gray-300 mb-8">
               Submit your Linux setup and see how it compares
             </p>
-            <code className="inline-block cursor-copy bg-black/50 px-6 py-3 rounded-lg text-green-400 text-lg">
-              python3 distroinstall.py
-            </code>
+            <CopyBlock text="python3 distroinstall.py" />
           </div>
         </div>
 

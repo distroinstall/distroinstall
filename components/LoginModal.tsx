@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { X, Eye, EyeOff } from 'lucide-react'
+import { Logo } from './Logo'
 
 type Mode = 'login' | 'register' | 'check_email'
 
@@ -97,7 +99,9 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
 
         {mode !== 'check_email' && <>
         <div className="text-center mb-6">
-          <div className="text-3xl mb-1">🐧</div>
+          <div className="flex justify-center mb-2">
+            <Logo size={36} />
+          </div>
           <h2 className="text-xl font-bold text-white">
             {mode === 'login' ? 'Sign in' : 'Create account'}
           </h2>
@@ -182,6 +186,18 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
           >
             {loading ? '...' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>
+
+          {mode === 'login' && (
+            <p className="text-center">
+              <Link
+                href="/forgot-password"
+                onClick={onClose}
+                className="text-gray-400 hover:text-purple-300 text-xs transition-colors"
+              >
+                Forgot your password?
+              </Link>
+            </p>
+          )}
         </form>
 
         <p className="text-center text-gray-500 text-xs mt-4">

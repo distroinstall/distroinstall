@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   }
 
   const hashed = await bcrypt.hash(password, 12)
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: { name: name || null, email, password: hashed },
   })
 
@@ -31,7 +31,18 @@ export async function POST(request: Request) {
     data: { identifier: email, token, expires },
   })
 
-  await sendVerificationEmail(email, token)
+  try {
+    await sendVerificationEmail(email, token)
+  } catch (error) {
+    console.error('Verification email failed, rolling back registration:', error)
+    // Roll back so the user can try again instead of being stuck as "already registered".
+    await prisma.verificationToken.deleteMany({ where: { identifier: email } })
+    await prisma.user.delete({ where: { id: user.id } })
+    return NextResponse.json(
+      { error: 'We could not send the verification email. Please try again in a moment.' },
+      { status: 502 }
+    )
+  }
 
   return NextResponse.json({ success: true, message: 'Check your email to verify your account.' })
 }
