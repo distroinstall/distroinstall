@@ -15,15 +15,6 @@ if ! command -v python3 &>/dev/null; then
   exit 1
 fi
 
-echo "📦 Checking dependencies..."
-python3 -m pip install --quiet --user distro psutil requests 2>/dev/null \
-  || pip3 install --quiet --user distro psutil requests 2>/dev/null \
-  || {
-    echo -e "${RED}❌ Could not install dependencies automatically.${NC}"
-    echo "Run manually: pip3 install distro psutil requests"
-    exit 1
-  }
-
 TMP=$(mktemp /tmp/distroinstall_XXXXXX.py)
 trap "rm -f $TMP" EXIT
 
@@ -31,4 +22,5 @@ echo "⬇️  Fetching script..."
 curl -sSL https://distroinstall.com/distroinstall.py -o "$TMP"
 
 echo ""
-python3 "$TMP"
+# No dependencies needed — the script uses only the Python standard library.
+python3 "$TMP" </dev/tty

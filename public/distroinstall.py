@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
 DistroInstall Detection Script
-Detects system information and sends it to the API
+Detects system information and sends it to the API.
+
+Zero dependencies — uses only the Python standard library, so it runs on any
+system with python3 (no pip, no virtualenv, no PEP 668 headaches).
 """
 
-import platform
-import distro
-import psutil
-import subprocess
-import requests
+import json
 import os
+import platform
+import subprocess
+import urllib.request
+import urllib.error
 
 API_URL = 'https://distroinstall.com/api/submit'
 BASE_URL = 'https://distroinstall.com'
@@ -28,24 +31,35 @@ def save_token(token):
         f.write(token)
 
 
+def read_os_release():
+    data = {}
+    try:
+        with open('/etc/os-release') as f:
+            for line in f:
+                line = line.strip()
+                if '=' in line and not line.startswith('#'):
+                    k, v = line.split('=', 1)
+                    data[k] = v.strip().strip('"')
+    except Exception:
+        pass
+    return data
+
+
 def get_desktop_environment():
-    de = os.environ.get('DESKTOP_SESSION', '')
-    if not de:
-        de = os.environ.get('XDG_CURRENT_DESKTOP', '')
+    de = os.environ.get('XDG_CURRENT_DESKTOP', '') or os.environ.get('DESKTOP_SESSION', '')
     return de or 'Unknown'
 
 
 def get_gpu_info():
     try:
         result = subprocess.run(['lspci'], capture_output=True, text=True)
-        gpu_lines = [line for line in result.stdout.split('\n') if 'VGA' in line or '3D' in line]
-        return gpu_lines[0].split(': ')[1] if gpu_lines else 'Unknown'
+        gpu_lines = [l for l in result.stdout.split('\n') if 'VGA' in l or '3D' in l]
+        return gpu_lines[0].split(': ', 1)[1] if gpu_lines else 'Unknown'
     except Exception:
         return 'Unknown'
 
 
 def get_cpu_model():
-    # platform.processor() is usually empty on Linux; read the real model name.
     try:
         with open('/proc/cpuinfo') as f:
             for line in f:
@@ -56,42 +70,108 @@ def get_cpu_model():
     return platform.processor() or 'Unknown'
 
 
+def get_cpu_counts():
+    """(physical_cores, logical_threads) from /proc/cpuinfo, with fallbacks."""
+    threads = os.cpu_count() or 0
+    physical = 0
+    try:
+        with open('/proc/cpuinfo') as f:
+            text = f.read()
+        pairs = set()
+        cores_val = None
+        for block in text.split('\n\n'):
+            phys = core = None
+            for line in block.split('\n'):
+                if line.startswith('physical id'):
+                    phys = line.split(':', 1)[1].strip()
+                elif line.startswith('core id'):
+                    core = line.split(':', 1)[1].strip()
+                elif line.startswith('cpu cores'):
+                    cores_val = line.split(':', 1)[1].strip()
+            if phys is not None and core is not None:
+                pairs.add((phys, core))
+        if pairs:
+            physical = len(pairs)
+        elif cores_val:
+            physical = int(cores_val)
+    except Exception:
+        pass
+    return (physical or threads), threads
+
+
+def get_ram_gb():
+    try:
+        with open('/proc/meminfo') as f:
+            for line in f:
+                if line.startswith('MemTotal'):
+                    kb = int(line.split()[1])
+                    return round(kb / 1024 / 1024, 2)
+    except Exception:
+        pass
+    return 0
+
+
+def detect_virtual():
+    """Best-effort VM detection via systemd-detect-virt; returns True/False/None."""
+    try:
+        r = subprocess.run(['systemd-detect-virt'], capture_output=True, text=True)
+        out = r.stdout.strip()
+        if out:
+            return out != 'none'
+    except Exception:
+        pass
+    return None
+
+
 def get_system_info():
+    osr = read_os_release()
+    cores, threads = get_cpu_counts()
     return {
-        'distro_name': distro.name(),
-        'distro_version': distro.version(),
-        'distro_codename': distro.codename(),
+        'distro_name': osr.get('NAME') or platform.system() or 'Unknown',
+        'distro_version': osr.get('VERSION_ID') or osr.get('BUILD_ID') or 'rolling',
+        'distro_codename': osr.get('VERSION_CODENAME', ''),
         'kernel': platform.release(),
         'architecture': platform.machine(),
         'desktop_environment': get_desktop_environment(),
         'cpu': get_cpu_model(),
-        'cpu_cores': psutil.cpu_count(logical=False),
-        'cpu_threads': psutil.cpu_count(logical=True),
-        'ram_gb': round(psutil.virtual_memory().total / (1024**3), 2),
+        'cpu_cores': cores,
+        'cpu_threads': threads,
+        'ram_gb': get_ram_gb(),
         'gpu': get_gpu_info(),
     }
 
 
 def send_to_api(data, token=None, is_virtual=None, usage_type=None):
-    payload = {
+    payload = json.dumps({
         'system_info': data,
         'token': token,
         'is_virtual': is_virtual,
         'usage_type': usage_type,
-    }
+    }).encode('utf-8')
+    req = urllib.request.Request(
+        API_URL, data=payload,
+        headers={'Content-Type': 'application/json'}, method='POST',
+    )
     try:
-        response = requests.post(API_URL, json=payload, timeout=10)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return json.loads(resp.read().decode('utf-8'))
+    except urllib.error.HTTPError as e:
+        print(f"❌ Error sending data: HTTP {e.code} {e.reason}")
+    except Exception as e:
         print(f"❌ Error sending data: {e}")
-        return None
+    return None
 
 
 def main():
     print("🐧 DistroInstall - System Detector\n")
 
-    is_virtual = input("Is this a virtual machine? (y/n): ").lower() == 'y'
+    detected_vm = detect_virtual()
+    if detected_vm is None:
+        is_virtual = input("Is this a virtual machine? (y/n): ").strip().lower() == 'y'
+    else:
+        suggestion = 'Y/n' if detected_vm else 'y/N'
+        ans = input(f"Virtual machine detected: {detected_vm}. Correct? ({suggestion}): ").strip().lower()
+        is_virtual = detected_vm if ans == '' else (ans == 'y')
 
     print("\nUsage type:")
     print("1. Desktop/Personal")
@@ -117,11 +197,11 @@ def main():
     print("\n🔍 Collecting system information...")
     system_info = get_system_info()
 
-    print(f"\n📊 Summary:")
+    print("\n📊 Summary:")
     print(f"  Distro:  {system_info['distro_name']} {system_info['distro_version']}")
     print(f"  Kernel:  {system_info['kernel']}")
     print(f"  DE:      {system_info['desktop_environment']}")
-    print(f"  CPU:     {system_info['cpu']} ({system_info['cpu_cores']} cores)")
+    print(f"  CPU:     {system_info['cpu']} ({system_info['cpu_cores']} cores / {system_info['cpu_threads']} threads)")
     print(f"  RAM:     {system_info['ram_gb']} GB")
     print(f"  GPU:     {system_info['gpu']}")
 
@@ -136,16 +216,16 @@ def main():
     if result:
         if token and token.startswith('usr_'):
             save_token(token)
-            print(f"\n✅ Data sent and linked to your account!")
+            print("\n✅ Data sent and linked to your account!")
             print(f"🌐 Your dashboard: {BASE_URL}/dashboard")
             print(f"\n💡 Personal token saved to {TOKEN_FILE}")
         elif result.get('token'):
             new_token = result['token']
             save_token(new_token)
-            print(f"\n✅ Data sent!")
+            print("\n✅ Data sent!")
             print(f"🌐 Your profile: {BASE_URL}/u/{new_token}")
             print(f"\n💡 Token saved to {TOKEN_FILE}")
-            print(f"   It will be loaded automatically next time.")
+            print("   It will be loaded automatically next time.")
 
 
 if __name__ == '__main__':
