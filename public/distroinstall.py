@@ -165,13 +165,15 @@ def send_to_api(data, token=None, is_virtual=None, usage_type=None):
 def main():
     print("🐧 DistroInstall - System Detector\n")
 
-    detected_vm = detect_virtual()
-    if detected_vm is None:
-        is_virtual = input("Is this a virtual machine? (y/n): ").strip().lower() == 'y'
+    default_vm = detect_virtual()  # True / False / None (unknown)
+    if default_vm is None:
+        default_vm = False
+    suffix = 'Y/n' if default_vm else 'y/N'  # capital = default when Enter is pressed
+    ans = input(f"Is this a virtual machine? ({suffix}): ").strip().lower()
+    if ans == '':
+        is_virtual = default_vm
     else:
-        suggestion = 'Y/n' if detected_vm else 'y/N'
-        ans = input(f"Virtual machine detected: {detected_vm}. Correct? ({suggestion}): ").strip().lower()
-        is_virtual = detected_vm if ans == '' else (ans == 'y')
+        is_virtual = ans.startswith('y')
 
     print("\nUsage type:")
     print("1. Desktop/Personal")

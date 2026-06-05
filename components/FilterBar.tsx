@@ -44,10 +44,10 @@ function FilterBarInner() {
     } else {
       params.set(key, value)
     }
-    router.push(`${pathname}?${params.toString()}`)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
-  const clearAll = () => router.push(pathname)
+  const clearAll = () => router.push(pathname, { scroll: false })
 
   return (
     <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 border border-white/10 mb-8">
