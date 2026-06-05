@@ -80,7 +80,11 @@ const usageLabels: Record<string, string> = {
   other: 'Other',
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: { compare?: string }
+}) {
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect('/login')
 
@@ -95,7 +99,9 @@ export default async function DashboardPage() {
   ])
 
   const latest = submissions[0]
-  const compareData = latest ? await getCompareData(latest) : null
+  // Which submission drives the "How do you compare?" panel (defaults to latest).
+  const selected = submissions.find(s => s.id === searchParams.compare) ?? latest
+  const compareData = selected ? await getCompareData(selected) : null
   const badges = await awardAndGetBadges(
     session.user.id,
     submissions,
@@ -204,20 +210,41 @@ export default async function DashboardPage() {
         </div>
 
         {/* Compare stats */}
-        {latest && compareData && (
+        {selected && compareData && (
           <CompareStats
-            ram={latest.ram}
-            cpuCores={latest.cpuCores}
-            cpuThreads={latest.cpuThreads}
-            gpu={latest.gpu}
-            distroName={latest.distroName}
-            usageType={latest.usageType}
+            ram={selected.ram}
+            cpuCores={selected.cpuCores}
+            cpuThreads={selected.cpuThreads}
+            gpu={selected.gpu}
+            distroName={selected.distroName}
+            usageType={selected.usageType}
             ramPercentile={compareData.ramPercentile}
             cpuPercentile={compareData.cpuPercentile}
             distroRank={compareData.distroRank}
             totalDistros={compareData.totalDistros}
             avgRam={compareData.avgRam}
             avgCpuCores={compareData.avgCpuCores}
+            isLatest={selected.id === latest?.id}
+            selector={
+              submissions.length > 1 ? (
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {submissions.map(s => (
+                    <Link
+                      key={s.id}
+                      href={`/dashboard?compare=${s.id}`}
+                      scroll={false}
+                      className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                        s.id === selected.id
+                          ? 'bg-purple-500/30 border-purple-400/50 text-purple-200'
+                          : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                      }`}
+                    >
+                      {s.distroName} · {new Date(s.timestamp).toLocaleDateString()}
+                    </Link>
+                  ))}
+                </div>
+              ) : null
+            }
           />
         )}
 

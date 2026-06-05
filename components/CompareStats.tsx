@@ -15,6 +15,8 @@ type Props = {
   usageType: string
   avgRam: number
   avgCpuCores: number
+  isLatest?: boolean
+  selector?: React.ReactNode
 }
 
 const usageLabels: Record<string, string> = {
@@ -73,14 +75,15 @@ function PercentileBar({ value, label, icon, yourValue, avgValue, unit }: {
 export function CompareStats({
   ram, cpuCores, cpuThreads, gpu, distroName,
   ramPercentile, cpuPercentile, distroRank, totalDistros, usageType,
-  avgRam, avgCpuCores
+  avgRam, avgCpuCores, isLatest = true, selector
 }: Props) {
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
       <h2 className="text-2xl font-bold text-white mb-2">📊 How do you compare?</h2>
-      <p className="text-gray-400 text-sm mb-6">
-        Based on your latest submission — {distroName}, {ram}GB RAM, {cpuCores}c/{cpuThreads}t
+      <p className="text-gray-400 text-sm mb-4">
+        Based on your {isLatest ? 'latest' : 'selected'} submission — {distroName}, {ram}GB RAM, {cpuCores}c/{cpuThreads}t
       </p>
+      {selector}
 
       <div className="grid sm:grid-cols-2 gap-4 mb-6">
         <PercentileBar
