@@ -85,7 +85,7 @@ export function CompareStats({
       </p>
       {selector}
 
-      <div className="grid sm:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <PercentileBar
           value={ramPercentile}
           label={`Your RAM: ${ram} GB`}
@@ -105,7 +105,7 @@ export function CompareStats({
       </div>
 
       {/* Distro rank + GPU + usage */}
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white/5 rounded-xl p-4 border border-white/10 text-center">
           <Trophy size={20} className="text-yellow-400 mx-auto mb-2" />
           <p className="text-gray-400 text-xs mb-1">Distro ranking</p>

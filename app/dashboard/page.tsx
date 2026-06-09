@@ -180,7 +180,7 @@ export default async function DashboardPage({
 
         {/* Stats — only meaningful once there's data */}
         {hasSubmissions && (
-          <div className="grid md:grid-cols-3 gap-4 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
             <div className="bg-white/10 backdrop-blur-lg rounded-xl p-5 border border-white/20">
               <p className="text-gray-400 text-sm">My submissions</p>
               <p className="text-4xl font-bold text-white mt-1">{submissions.length}</p>
