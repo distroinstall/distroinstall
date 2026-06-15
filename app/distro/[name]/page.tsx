@@ -53,7 +53,7 @@ async function getDistroStats(name: string) {
     }),
     prisma.submission.aggregate({
       where: { distroName: name },
-      _avg: { ram: true, cpuCores: true },
+      _avg: { ram: true, cpuCores: true, cpuThreads: true },
       _min: { ram: true },
       _max: { ram: true },
     }),
@@ -81,6 +81,7 @@ async function getDistroStats(name: string) {
         desktopEnv: true,
         cpu: true,
         cpuCores: true,
+        cpuThreads: true,
         ram: true,
         gpu: true,
         isVirtual: true,
@@ -100,6 +101,7 @@ async function getDistroStats(name: string) {
     virtualVsPhysical,
     avgRam: hardwareStats._avg.ram,
     avgCpuCores: hardwareStats._avg.cpuCores,
+    avgCpuThreads: hardwareStats._avg.cpuThreads,
     minRam: hardwareStats._min.ram,
     maxRam: hardwareStats._max.ram,
     gpuStats,
@@ -191,9 +193,11 @@ export default async function DistroPage({ params }: { params: { name: string } 
             <div className="flex items-center gap-3">
               <Cpu className="text-orange-400" size={28} />
               <div>
-                <p className="text-gray-300 text-sm">Avg CPU Cores</p>
-                <p className="text-3xl font-bold text-white">
-                  {stats.avgCpuCores != null ? stats.avgCpuCores.toFixed(1) : '—'}
+                <p className="text-gray-300 text-sm">Avg CPU</p>
+                <p className="text-2xl font-bold text-white whitespace-nowrap">
+                  <span className="text-orange-300">{stats.avgCpuCores != null ? stats.avgCpuCores.toFixed(1) : '—'}c</span>
+                  <span className="text-gray-500"> / </span>
+                  <span className="text-yellow-300">{stats.avgCpuThreads != null ? stats.avgCpuThreads.toFixed(1) : '—'}t</span>
                 </p>
               </div>
             </div>
@@ -276,9 +280,10 @@ export default async function DistroPage({ params }: { params: { name: string } 
                   <th className="pb-3 pr-4 font-medium">Version</th>
                   <th className="pb-3 pr-4 font-medium">Desktop</th>
                   <th className="pb-3 pr-4 font-medium">CPU</th>
-                  <th className="pb-3 pr-4 font-medium text-right">Cores</th>
                   <th className="pb-3 pr-4 font-medium text-right">RAM</th>
+                  <th className="pb-3 pr-4 font-medium">GPU</th>
                   <th className="pb-3 pr-4 font-medium">Type</th>
+                  <th className="pb-3 pr-4 font-medium">Usage</th>
                   <th className="pb-3 font-medium">Date</th>
                 </tr>
               </thead>
@@ -287,11 +292,18 @@ export default async function DistroPage({ params }: { params: { name: string } 
                   <tr key={i} className="hover:bg-white/5 transition-colors">
                     <td className="py-3 pr-4 text-white font-medium">{sub.distroVersion}</td>
                     <td className="py-3 pr-4 text-gray-300">{sub.desktopEnv}</td>
-                    <td className="py-3 pr-4 text-gray-300 text-sm max-w-[160px]">
-                      <span title={sub.cpu} className="block truncate">{sub.cpu}</span>
+                    <td className="py-3 pr-4 text-sm max-w-[180px]">
+                      <span title={sub.cpu} className="block truncate text-gray-300">{sub.cpu}</span>
+                      <span className="font-mono text-xs whitespace-nowrap">
+                        <span className="text-orange-300">{sub.cpuCores}c</span>
+                        <span className="text-gray-500"> / </span>
+                        <span className="text-yellow-300">{sub.cpuThreads}t</span>
+                      </span>
                     </td>
-                    <td className="py-3 pr-4 text-orange-300 text-right font-mono">{sub.cpuCores}</td>
-                    <td className="py-3 pr-4 text-cyan-300 text-right font-mono">{sub.ram} GB</td>
+                    <td className="py-3 pr-4 text-cyan-300 text-right font-mono whitespace-nowrap">{sub.ram} GB</td>
+                    <td className="py-3 pr-4 text-gray-300 text-sm max-w-[160px]">
+                      <span title={sub.gpu} className="block truncate">{sub.gpu}</span>
+                    </td>
                     <td className="py-3 pr-4">
                       <span className={`text-xs px-2 py-1 rounded ${
                         sub.isVirtual
@@ -301,7 +313,8 @@ export default async function DistroPage({ params }: { params: { name: string } 
                         {sub.isVirtual ? 'Virtual' : 'Physical'}
                       </span>
                     </td>
-                    <td className="py-3 text-gray-500 text-xs">
+                    <td className="py-3 pr-4 text-gray-300 text-sm">{usageLabels[sub.usageType] ?? sub.usageType}</td>
+                    <td className="py-3 text-gray-500 text-xs whitespace-nowrap">
                       {new Date(sub.timestamp).toLocaleDateString()}
                     </td>
                   </tr>

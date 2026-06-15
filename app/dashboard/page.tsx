@@ -292,8 +292,8 @@ export default async function DashboardPage({
                   <tr className="text-gray-400 text-sm text-left border-b border-white/10">
                     <th className="pb-3 pr-4 font-medium">Distro</th>
                     <th className="pb-3 pr-4 font-medium">Desktop</th>
+                    <th className="pb-3 pr-4 font-medium">CPU</th>
                     <th className="pb-3 pr-4 font-medium text-right">RAM</th>
-                    <th className="pb-3 pr-4 font-medium text-right">CPU</th>
                     <th className="pb-3 pr-4 font-medium">GPU</th>
                     <th className="pb-3 pr-4 font-medium">Type</th>
                     <th className="pb-3 pr-4 font-medium">Usage</th>
@@ -309,12 +309,15 @@ export default async function DashboardPage({
                         <p className="text-gray-500 text-xs">{sub.distroVersion}</p>
                       </td>
                       <td className="py-3 pr-4 text-gray-300 text-sm">{sub.desktopEnv}</td>
-                      <td className="py-3 pr-4 text-cyan-300 text-right font-mono text-sm">{sub.ram} GB</td>
-                      <td className="py-3 pr-4 text-right font-mono text-sm whitespace-nowrap">
-                        <span className="text-orange-300">{sub.cpuCores}c</span>
-                        <span className="text-gray-500"> / </span>
-                        <span className="text-yellow-300">{sub.cpuThreads}t</span>
+                      <td className="py-3 pr-4 text-sm max-w-[180px]">
+                        <span title={sub.cpu} className="block truncate text-gray-300">{sub.cpu}</span>
+                        <span className="font-mono text-xs whitespace-nowrap">
+                          <span className="text-orange-300">{sub.cpuCores}c</span>
+                          <span className="text-gray-500"> / </span>
+                          <span className="text-yellow-300">{sub.cpuThreads}t</span>
+                        </span>
                       </td>
+                      <td className="py-3 pr-4 text-cyan-300 text-right font-mono text-sm whitespace-nowrap">{sub.ram} GB</td>
                       <td className="py-3 pr-4 text-gray-300 text-sm max-w-[160px]">
                         <span title={sub.gpu} className="block truncate">{sub.gpu}</span>
                       </td>

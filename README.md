@@ -36,6 +36,54 @@ download and inspect [`distroinstall.py`](https://distroinstall.com/distroinstal
 and run it yourself. See [how it works](https://distroinstall.com/how-it-works)
 for exactly what is (and isn't) collected.
 
+## Submit via the API
+
+Prefer not to run the script? It's just a JSON `POST` over HTTPS — you can gather
+the fields with whatever tools you trust and send them yourself.
+
+**Endpoint:** `POST https://distroinstall.com/api/submit` · `Content-Type: application/json`
+
+```bash
+curl -X POST https://distroinstall.com/api/submit \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "system_info": {
+      "distro_name": "Ubuntu",
+      "distro_version": "24.04",
+      "kernel": "6.8.0-51-generic",
+      "desktop_environment": "GNOME",
+      "cpu": "AMD Ryzen 7 7700X",
+      "cpu_cores": 8,
+      "cpu_threads": 16,
+      "ram_gb": 32,
+      "gpu": "Radeon RX 7800 XT"
+    },
+    "is_virtual": false,
+    "usage_type": "desktop"
+  }'
+```
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `system_info.distro_name` | string | **Required.** |
+| `system_info.distro_version` | string | e.g. `24.04`, `rolling`. |
+| `system_info.kernel` | string | e.g. `uname -r`. |
+| `system_info.desktop_environment` | string | e.g. GNOME, KDE Plasma. |
+| `system_info.cpu` | string | CPU model. |
+| `system_info.cpu_cores` | int | Physical cores. |
+| `system_info.cpu_threads` | int | Logical threads. |
+| `system_info.ram_gb` | number | Total RAM in GB. |
+| `system_info.gpu` | string | GPU model. |
+| `is_virtual` | boolean | `true` if a VM. |
+| `usage_type` | string | One of `desktop`, `programming`, `gaming`, `server`, `other`. |
+| `token` | string | *Optional.* `usr_…` links to your account; any other string keeps a history under that token; omit for a one-off anonymous submission. |
+
+Notes:
+- Only `distro_name` is strictly required; missing fields default to `Unknown`/`0`.
+- String fields are trimmed and length-capped; numbers are clamped to sane ranges.
+- Rate limited per IP. Re-submitting an **identical** payload under the same `token`
+  just refreshes the timestamp instead of creating a duplicate entry.
+
 ## Tech stack
 
 - **Next.js 14** (App Router) + **React 18** + **TypeScript**

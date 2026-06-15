@@ -146,6 +146,43 @@ export default function HowItWorksPage() {
           </div>
         </div>
 
+        {/* API */}
+        <div className="mb-14">
+          <h2 className="text-2xl font-bold text-white mb-4">Prefer not to run the script? Use the API</h2>
+          <p className="text-gray-300 leading-relaxed mb-4">
+            It&apos;s just a JSON <code className="text-green-300 bg-white/10 px-1.5 py-0.5 rounded">POST</code> over
+            HTTPS. Gather the fields with whatever tools you trust and send them yourself — no need to run our script:
+          </p>
+          <pre className="bg-black/40 border border-white/10 rounded-xl p-4 overflow-x-auto text-sm text-gray-200 leading-relaxed">
+{`curl -X POST https://distroinstall.com/api/submit \\
+  -H 'Content-Type: application/json' \\
+  -d '{
+    "system_info": {
+      "distro_name": "Ubuntu",
+      "distro_version": "24.04",
+      "kernel": "6.8.0-51-generic",
+      "desktop_environment": "GNOME",
+      "cpu": "AMD Ryzen 7 7700X",
+      "cpu_cores": 8,
+      "cpu_threads": 16,
+      "ram_gb": 32,
+      "gpu": "Radeon RX 7800 XT"
+    },
+    "is_virtual": false,
+    "usage_type": "desktop"
+  }'`}
+          </pre>
+          <p className="text-gray-400 text-sm mt-3">
+            Only <code className="text-gray-300">distro_name</code> is required.{' '}
+            <code className="text-gray-300">usage_type</code> is one of desktop, programming, gaming,
+            server or other. Add an optional <code className="text-gray-300">token</code> to keep a
+            history or link submissions to your account. Full field reference in the{' '}
+            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+              README on GitHub
+            </a>.
+          </p>
+        </div>
+
         {/* Privacy link */}
         <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-lg rounded-2xl p-8 border border-white/20 text-center">
           <h2 className="text-2xl font-bold text-white mb-2">Your data, your control</h2>
