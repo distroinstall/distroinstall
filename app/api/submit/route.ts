@@ -74,23 +74,58 @@ export async function POST(request: Request) {
 
     const usage = typeof usage_type === 'string' && VALID_USAGE.has(usage_type) ? usage_type : 'other'
 
-    const submission = await prisma.submission.create({
-      data: {
-        token: submissionToken,
-        userId,
-        distroName: str(system_info.distro_name, 60),
-        distroVersion: str(system_info.distro_version, 40),
-        kernel: str(system_info.kernel, 60),
-        desktopEnv: str(system_info.desktop_environment, 40),
-        cpu: str(system_info.cpu, 120),
-        cpuCores: int(system_info.cpu_cores, 0, 1024),
-        cpuThreads: int(system_info.cpu_threads, 0, 4096),
-        ram: float(system_info.ram_gb, 0, 8192),
-        gpu: str(system_info.gpu, 120),
-        isVirtual: Boolean(is_virtual),
-        usageType: usage,
-      },
+    const submissionData = {
+      token: submissionToken,
+      userId,
+      distroName: str(system_info.distro_name, 60),
+      distroVersion: str(system_info.distro_version, 40),
+      kernel: str(system_info.kernel, 60),
+      desktopEnv: str(system_info.desktop_environment, 40),
+      cpu: str(system_info.cpu, 120),
+      cpuCores: int(system_info.cpu_cores, 0, 1024),
+      cpuThreads: int(system_info.cpu_threads, 0, 4096),
+      ram: float(system_info.ram_gb, 0, 8192),
+      gpu: str(system_info.gpu, 120),
+      isVirtual: Boolean(is_virtual),
+      usageType: usage,
+    }
+
+    // Dedup: if the most recent submission for this token is identical, just
+    // refresh its timestamp instead of creating a duplicate row (e.g. running
+    // the script again without any system changes).
+    const last = await prisma.submission.findFirst({
+      where: { token: submissionToken },
+      orderBy: { timestamp: 'desc' },
     })
+    const isIdentical =
+      last !== null &&
+      last.distroName === submissionData.distroName &&
+      last.distroVersion === submissionData.distroVersion &&
+      last.kernel === submissionData.kernel &&
+      last.desktopEnv === submissionData.desktopEnv &&
+      last.cpu === submissionData.cpu &&
+      last.cpuCores === submissionData.cpuCores &&
+      last.cpuThreads === submissionData.cpuThreads &&
+      last.ram === submissionData.ram &&
+      last.gpu === submissionData.gpu &&
+      last.isVirtual === submissionData.isVirtual &&
+      last.usageType === submissionData.usageType
+
+    if (isIdentical && last) {
+      await prisma.submission.update({
+        where: { id: last.id },
+        data: { timestamp: new Date() },
+      })
+      return NextResponse.json({
+        success: true,
+        token: submissionToken,
+        submission_id: last.id,
+        linked_to_account: userId !== null,
+        unchanged: true,
+      })
+    }
+
+    const submission = await prisma.submission.create({ data: submissionData })
 
     return NextResponse.json({
       success: true,

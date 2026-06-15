@@ -50,11 +50,39 @@ def get_desktop_environment():
     return de or 'Unknown'
 
 
+def clean_gpu_name(raw):
+    # lspci gives very long strings like:
+    #   "Advanced Micro Devices, Inc. [AMD/ATI] Navi 32 [Radeon RX 7700 XT / 7800 XT] (rev c8)"
+    # The friendly model is usually inside the last [...]; keep that and drop "(rev xx)".
+    import re
+    name = re.sub(r'\s*\(rev [^)]+\)\s*$', '', raw).strip()
+    brackets = re.findall(r'\[([^\]]+)\]', name)
+    if brackets:
+        candidate = brackets[-1].strip()
+        # Skip vendor tags like "AMD/ATI"; prefer a real model name.
+        if candidate and candidate.upper() not in ('AMD/ATI',):
+            return candidate
+    # No useful model in brackets — strip common vendor prefixes/tags.
+    for prefix in (
+        'Advanced Micro Devices, Inc. [AMD/ATI] ',
+        'Advanced Micro Devices, Inc. ',
+        'Intel Corporation ',
+        'NVIDIA Corporation ',
+        '[AMD/ATI] ',
+    ):
+        if name.startswith(prefix):
+            name = name[len(prefix):]
+            break
+    return name.strip() or 'Unknown'
+
+
 def get_gpu_info():
     try:
         result = subprocess.run(['lspci'], capture_output=True, text=True)
         gpu_lines = [l for l in result.stdout.split('\n') if 'VGA' in l or '3D' in l]
-        return gpu_lines[0].split(': ', 1)[1] if gpu_lines else 'Unknown'
+        if not gpu_lines:
+            return 'Unknown'
+        return clean_gpu_name(gpu_lines[0].split(': ', 1)[1])
     except Exception:
         return 'Unknown'
 
