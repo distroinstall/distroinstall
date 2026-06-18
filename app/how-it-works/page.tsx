@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft, Check, X, Terminal, FileSearch, BarChart3 } from 'lucide-react'
+import { ArrowLeft, Check, X, Terminal, FileSearch, BarChart3, ShieldCheck, Download } from 'lucide-react'
 import { CopyBlock } from '@/components/CopyButton'
 import { GITHUB_URL } from '@/lib/utils'
 
@@ -63,17 +63,28 @@ export default function HowItWorksPage() {
         {/* The command */}
         <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl p-6 border border-white/10 mb-6">
           <p className="text-white font-semibold mb-3">Run it:</p>
-          <CopyBlock text="curl -sSL https://distroinstall.com/install.sh | bash" />
-          <p className="text-gray-400 text-sm mt-3">
-            Prefer to run it yourself? Download{' '}
-            <a href="/distroinstall.py" className="text-blue-400 hover:underline">distroinstall.py</a>{' '}
-            and run <code className="text-gray-300">python3 distroinstall.py</code>.
+          <div className="flex flex-col sm:flex-row gap-2">
+            <a
+              href="/distroinstall.py"
+              download
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm transition-colors whitespace-nowrap"
+            >
+              <Download size={16} />
+              Download distroinstall.py
+            </a>
+            <div className="flex-1 min-w-0">
+              <CopyBlock text="python3 distroinstall.py" />
+            </div>
+          </div>
+          <p className="text-gray-400 text-sm mt-4 mb-2">
+            We recommend downloading and reading it first. Prefer a one-liner that fetches and runs it?
           </p>
+          <CopyBlock text="curl -sSL https://distroinstall.com/install.sh | bash" />
         </div>
 
         {/* Inspect first */}
         <div className="bg-blue-500/10 border border-blue-400/30 rounded-xl p-6 mb-14">
-          <p className="text-white font-semibold mb-2">🔍 Don&apos;t trust, verify</p>
+          <p className="text-white font-semibold mb-2 flex items-center gap-2"><ShieldCheck className="text-purple-400 shrink-0" size={18} />Don&apos;t trust, verify</p>
           <p className="text-gray-300 text-sm mb-4">
             We&apos;d never ask you to pipe a script into your shell without being able to read
             it first. Both files are public — open them in your browser before running anything.

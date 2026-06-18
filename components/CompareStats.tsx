@@ -1,6 +1,6 @@
 'use client'
 
-import { Cpu, Database, Monitor, TrendingUp, Trophy } from 'lucide-react'
+import { Cpu, Database, Monitor, TrendingUp, Trophy, BarChart3 } from 'lucide-react'
 
 type Props = {
   ram: number
@@ -79,7 +79,7 @@ export function CompareStats({
 }: Props) {
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
-      <h2 className="text-2xl font-bold text-white mb-2">📊 How do you compare?</h2>
+      <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2.5"><BarChart3 className="text-purple-400 shrink-0" size={22} />How do you compare?</h2>
       <p className="text-gray-400 text-sm mb-4">
         Based on your {isLatest ? 'latest' : 'selected'} submission — {distroName}, {ram}GB RAM, {cpuCores}c/{cpuThreads}t
       </p>

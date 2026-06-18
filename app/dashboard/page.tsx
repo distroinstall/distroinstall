@@ -10,7 +10,7 @@ import { CompareStats } from '@/components/CompareStats'
 import { CopyButton, CopyBlock } from '@/components/CopyButton'
 import { BadgeDisplay } from '@/components/BadgeDisplay'
 import { computeEarnedBadges } from '@/lib/badges'
-import { ExternalLink, Settings } from 'lucide-react'
+import { ExternalLink, Settings, Rocket, Award, Map as MapIcon, List, Key, Download } from 'lucide-react'
 import { nanoid } from 'nanoid'
 
 async function getOrCreateSubmissionToken(userId: string): Promise<string> {
@@ -157,12 +157,28 @@ export default async function DashboardPage({
         {/* Get started — only when the user has no submissions yet */}
         {!hasSubmissions && (
           <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-2">🚀 Get started</h2>
+            <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2.5"><Rocket className="text-purple-400 shrink-0" size={22} />Get started</h2>
             <p className="text-gray-300 mb-5">
               Run the script to send your first system snapshot. Paste your token when it asks,
               and your submissions will link straight to this account.
             </p>
-            <CopyBlock text="curl -sSL https://distroinstall.com/install.sh | bash" />
+            <div className="flex flex-col sm:flex-row gap-2">
+              <a
+                href="/distroinstall.py"
+                download
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm transition-colors whitespace-nowrap"
+              >
+                <Download size={16} />
+                Download script
+              </a>
+              <div className="flex-1 min-w-0">
+                <CopyBlock text="python3 distroinstall.py" />
+              </div>
+            </div>
+            <p className="text-gray-500 text-xs mt-2">
+              Prefer one line?{' '}
+              <code className="text-gray-400 break-all">curl -sSL https://distroinstall.com/install.sh | bash</code>
+            </p>
 
             <p className="text-gray-300 text-sm mt-5 mb-2 font-medium">Your token:</p>
             <div className="flex items-center gap-3 bg-black/30 rounded-lg px-4 py-3 border border-white/10">
@@ -205,7 +221,7 @@ export default async function DashboardPage({
 
         {/* Badges — always shown, with locked ones to chase */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
-          <h2 className="text-2xl font-bold text-white mb-6">🏅 My Badges</h2>
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2.5"><Award className="text-purple-400 shrink-0" size={22} />My Badges</h2>
           <BadgeDisplay badges={badges} showLocked />
         </div>
 
@@ -251,7 +267,7 @@ export default async function DashboardPage({
         {/* Distro timeline — only shown when 2+ distros */}
         {timeline.length >= 2 && (
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-6">🗺️ My Distro Journey</h2>
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2.5"><MapIcon className="text-purple-400 shrink-0" size={22} />My Distro Journey</h2>
             <div className="relative pl-8">
               <div className="absolute left-3 top-2 bottom-2 w-px bg-white/15" />
               {timeline.map(([distro, firstSeen]) => {
@@ -285,7 +301,7 @@ export default async function DashboardPage({
         {/* Submissions table — only when there's data */}
         {hasSubmissions && (
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-6">🐧 My Submissions</h2>
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2.5"><List className="text-purple-400 shrink-0" size={22} />My Submissions</h2>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -351,7 +367,7 @@ export default async function DashboardPage({
         {hasSubmissions && (
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
             <div className="flex items-start justify-between gap-4 flex-wrap mb-2">
-              <h2 className="text-2xl font-bold text-white">🔑 Your submission token</h2>
+              <h2 className="text-2xl font-bold text-white flex items-center gap-2.5"><Key className="text-purple-400 shrink-0" size={22} />Your submission token</h2>
               <Link
                 href={`/u/${submissionToken}`}
                 className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors"

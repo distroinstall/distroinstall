@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, CircleCheck } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 
 function ResetContent() {
@@ -67,7 +67,9 @@ function ResetContent() {
           </div>
         ) : status === 'success' ? (
           <div className="text-center">
-            <div className="text-4xl mb-3">✅</div>
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-green-500/10 text-green-400 mb-3">
+              <CircleCheck size={26} />
+            </div>
             <h2 className="text-2xl font-bold text-white mb-2">Password updated</h2>
             <p className="text-gray-400 text-sm mb-8">
               You can now sign in with your new password. Redirecting…

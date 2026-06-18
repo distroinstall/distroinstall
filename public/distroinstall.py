@@ -3,7 +3,7 @@
 DistroInstall Detection Script
 Detects system information and sends it to the API.
 
-Zero dependencies — uses only the Python standard library, so it runs on any
+Zero dependencies - uses only the Python standard library, so it runs on any
 system with python3 (no pip, no virtualenv, no PEP 668 headaches).
 """
 
@@ -62,7 +62,7 @@ def clean_gpu_name(raw):
         # Skip vendor tags like "AMD/ATI"; prefer a real model name.
         if candidate and candidate.upper() not in ('AMD/ATI',):
             return candidate
-    # No useful model in brackets — strip common vendor prefixes/tags.
+    # No useful model in brackets - strip common vendor prefixes/tags.
     for prefix in (
         'Advanced Micro Devices, Inc. [AMD/ATI] ',
         'Advanced Micro Devices, Inc. ',
@@ -184,14 +184,14 @@ def send_to_api(data, token=None, is_virtual=None, usage_type=None):
         with urllib.request.urlopen(req, timeout=15) as resp:
             return json.loads(resp.read().decode('utf-8'))
     except urllib.error.HTTPError as e:
-        print(f"❌ Error sending data: HTTP {e.code} {e.reason}")
+        print(f"Error sending data: HTTP {e.code} {e.reason}")
     except Exception as e:
-        print(f"❌ Error sending data: {e}")
+        print(f"Error sending data: {e}")
     return None
 
 
 def main():
-    print("🐧 DistroInstall - System Detector\n")
+    print(">_ DistroInstall - System Detector\n")
 
     default_vm = detect_virtual()  # True / False / None (unknown)
     if default_vm is None:
@@ -215,19 +215,19 @@ def main():
 
     existing_token = load_token()
     if existing_token:
-        print(f"\n🔑 Saved token found: {existing_token[:24]}...")
+        print(f"\nSaved token found: {existing_token[:24]}...")
         use_existing = input("Use this token? (Y/n): ").strip().lower()
         token = existing_token if use_existing != 'n' else None
     else:
-        print("\n🔑 User token (optional):")
-        print(f"   Find it at your dashboard → {BASE_URL}/dashboard")
+        print("\nUser token (optional):")
+        print(f"   Find it at your dashboard -> {BASE_URL}/dashboard")
         raw = input("   Token (Enter to submit anonymously): ").strip()
         token = raw if raw else None
 
-    print("\n🔍 Collecting system information...")
+    print("\n==> Collecting system information...")
     system_info = get_system_info()
 
-    print("\n📊 Summary:")
+    print("\nSummary:")
     print(f"  Distro:  {system_info['distro_name']} {system_info['distro_version']}")
     print(f"  Kernel:  {system_info['kernel']}")
     print(f"  DE:      {system_info['desktop_environment']}")
@@ -240,21 +240,21 @@ def main():
         print("Cancelled.")
         return
 
-    print("\n📤 Sending data...")
+    print("\n==> Sending data...")
     result = send_to_api(system_info, token, is_virtual, usage_type)
 
     if result:
         if token and token.startswith('usr_'):
             save_token(token)
-            print("\n✅ Data sent and linked to your account!")
-            print(f"🌐 Your dashboard: {BASE_URL}/dashboard")
-            print(f"\n💡 Personal token saved to {TOKEN_FILE}")
+            print("\n[ok] Data sent and linked to your account!")
+            print(f"     Your dashboard: {BASE_URL}/dashboard")
+            print(f"\nPersonal token saved to {TOKEN_FILE}")
         elif result.get('token'):
             new_token = result['token']
             save_token(new_token)
-            print("\n✅ Data sent!")
-            print(f"🌐 Your profile: {BASE_URL}/u/{new_token}")
-            print(f"\n💡 Token saved to {TOKEN_FILE}")
+            print("\n[ok] Data sent!")
+            print(f"     Your profile: {BASE_URL}/u/{new_token}")
+            print(f"\nToken saved to {TOKEN_FILE}")
             print("   It will be loaded automatically next time.")
 
 

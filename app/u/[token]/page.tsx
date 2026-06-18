@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { ArrowLeft, Clock } from 'lucide-react'
+import { ArrowLeft, Clock, Award } from 'lucide-react'
 import { CopyBlock } from '@/components/CopyButton'
 import { BadgeDisplay } from '@/components/BadgeDisplay'
 import { SITE_URL } from '@/lib/utils'
@@ -68,7 +68,7 @@ export default async function ProfilePage({ params }: { params: { token: string 
         {/* Badges (if user is registered) */}
         {userWithBadges?.badges && userWithBadges.badges.length > 0 && (
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-6">🏅 Badges</h2>
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2.5"><Award className="text-purple-400 shrink-0" size={22} />Badges</h2>
             <BadgeDisplay badges={userWithBadges.badges} />
           </div>
         )}

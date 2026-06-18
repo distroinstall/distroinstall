@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { X, Eye, EyeOff } from 'lucide-react'
+import { X, Eye, EyeOff, Mail } from 'lucide-react'
 import { Logo } from './Logo'
 
 type Mode = 'login' | 'register' | 'check_email'
@@ -79,7 +79,9 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
 
         {mode === 'check_email' && (
           <div className="text-center py-4">
-            <div className="text-5xl mb-4">📬</div>
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-300 mb-4">
+              <Mail size={26} />
+            </div>
             <h2 className="text-xl font-bold text-white mb-2">Revisa tu email</h2>
             <p className="text-gray-400 text-sm mb-2">
               Te hemos enviado un enlace de verificación a

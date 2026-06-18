@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, Download } from 'lucide-react'
+import { ArrowLeft, Download, Settings } from 'lucide-react'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { SettingsForm } from '@/components/SettingsForm'
@@ -34,7 +34,7 @@ export default async function SettingsPage() {
           Back to dashboard
         </Link>
 
-        <h1 className="text-4xl font-bold text-white mb-10">⚙️ Settings</h1>
+        <h1 className="text-4xl font-bold text-white mb-10 flex items-center gap-3"><Settings className="text-purple-400 shrink-0" size={30} />Settings</h1>
 
         {/* Profile */}
         <section className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">

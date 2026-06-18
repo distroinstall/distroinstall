@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { ArrowLeft, Users, HardDrive, Cpu, Database, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Users, HardDrive, Cpu, Database, ExternalLink, Package, Palette, Target, Monitor, Layers, Activity } from 'lucide-react'
 import { HorizontalBarChart, DesktopPieChart, UsagePieChart } from '@/components/Charts'
 import { getDistroMeta } from '@/lib/distros'
 
@@ -219,7 +219,7 @@ export default async function DistroPage({ params }: { params: { name: string } 
 
           {/* Versions */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <h2 className="text-2xl font-bold text-white mb-6">📦 Versions</h2>
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2.5"><Package className="text-purple-400 shrink-0" size={22} />Versions</h2>
             {stats.versionStats.length > 0
               ? <HorizontalBarChart
                   data={stats.versionStats.map(v => ({ label: v.distroVersion, count: v._count.distroVersion }))}
@@ -229,7 +229,7 @@ export default async function DistroPage({ params }: { params: { name: string } 
 
           {/* Desktop environments */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <h2 className="text-2xl font-bold text-white mb-6">🎨 Desktop Environments</h2>
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2.5"><Palette className="text-purple-400 shrink-0" size={22} />Desktop Environments</h2>
             {stats.desktopStats.length > 0
               ? <DesktopPieChart data={stats.desktopStats} />
               : <p className="text-gray-400 text-center py-8">No data</p>}
@@ -237,7 +237,7 @@ export default async function DistroPage({ params }: { params: { name: string } 
 
           {/* Usage types */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <h2 className="text-2xl font-bold text-white mb-6">🎯 Usage Types</h2>
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2.5"><Target className="text-purple-400 shrink-0" size={22} />Usage Types</h2>
             {stats.usageStats.length > 0
               ? <UsagePieChart data={stats.usageStats} labels={usageLabels} />
               : <p className="text-gray-400 text-center py-8">No data</p>}
@@ -245,7 +245,7 @@ export default async function DistroPage({ params }: { params: { name: string } 
 
           {/* GPU distribution */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <h2 className="text-2xl font-bold text-white mb-6">🎮 GPUs</h2>
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2.5"><Monitor className="text-purple-400 shrink-0" size={22} />GPUs</h2>
             {stats.gpuStats.length > 0
               ? <HorizontalBarChart
                   yAxisWidth={160}
@@ -262,7 +262,7 @@ export default async function DistroPage({ params }: { params: { name: string } 
         {/* Kernels */}
         {stats.kernelStats.length > 1 && (
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-6">🐧 Kernel Versions</h2>
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2.5"><Layers className="text-purple-400 shrink-0" size={22} />Kernel Versions</h2>
             <HorizontalBarChart
               yAxisWidth={160}
               data={stats.kernelStats.map(k => ({ label: k.kernel, count: k._count.kernel }))}
@@ -272,7 +272,7 @@ export default async function DistroPage({ params }: { params: { name: string } 
 
         {/* Recent submissions */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-          <h2 className="text-2xl font-bold text-white mb-6">⚡ Recent Submissions</h2>
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2.5"><Activity className="text-purple-400 shrink-0" size={22} />Recent Submissions</h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>

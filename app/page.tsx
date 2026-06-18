@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { Download, TrendingUp, Users, HardDrive } from 'lucide-react'
+import { Download, TrendingUp, Users, HardDrive, Box, LineChart, Flame, Trophy, Palette, Target, Activity, Cpu } from 'lucide-react'
 import { HorizontalBarChart, DesktopPieChart, UsagePieChart, GrowthLineChart } from '@/components/Charts'
 import { FilterBar } from '@/components/FilterBar'
 import { CopyBlock } from '@/components/CopyButton'
@@ -199,16 +199,33 @@ export default async function Home({
           </div>
 
           <div className="max-w-3xl mx-auto bg-slate-800/50 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-3 mb-4">
               <Download className="text-green-400" size={24} />
               <span className="text-white font-semibold">Submit your system:</span>
             </div>
-            <CopyBlock text="curl -sSL https://distroinstall.com/install.sh | bash" />
-            <p className="text-gray-400 text-sm mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-              <span>
-                Or download <a href="/distroinstall.py" className="text-blue-400 hover:underline">distroinstall.py</a>
-              </span>
-              <span className="text-gray-600">·</span>
+
+            {/* Primary: download and run it yourself */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <a
+                href="/distroinstall.py"
+                download
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm transition-colors whitespace-nowrap"
+              >
+                <Download size={16} />
+                Download script
+              </a>
+              <div className="flex-1 min-w-0">
+                <CopyBlock text="python3 distroinstall.py" />
+              </div>
+            </div>
+
+            {/* Alternative: the one-liner, for those who want it */}
+            <div className="mt-4">
+              <p className="text-gray-500 text-xs mb-1.5">Or the one-liner (fetches &amp; runs the install script):</p>
+              <CopyBlock text="curl -sSL https://distroinstall.com/install.sh | bash" />
+            </div>
+
+            <p className="text-gray-400 text-sm mt-4 text-center">
               <Link href="/how-it-works" className="text-blue-400 hover:underline">
                 What does it collect?
               </Link>
@@ -257,7 +274,7 @@ export default async function Home({
 
           <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
             <div className="flex items-center gap-3">
-              <div className="text-3xl">💻</div>
+              <Box className="text-orange-400" size={32} />
               <div>
                 <p className="text-gray-300 text-sm">Virtual Machines</p>
                 <p className="text-4xl font-bold text-white">
@@ -271,7 +288,7 @@ export default async function Home({
         {/* Growth + Trending */}
         <div className="grid lg:grid-cols-3 gap-8 mb-8">
           <div className="lg:col-span-2 bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <h2 className="text-2xl font-bold text-white mb-1">📈 Community Growth</h2>
+            <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2.5"><LineChart className="text-purple-400 shrink-0" size={22} />Community Growth</h2>
             <p className="text-gray-400 text-sm mb-6">Submissions over the last 30 days</p>
             {stats.dailyGrowth.length > 0
               ? <GrowthLineChart data={stats.dailyGrowth} />
@@ -279,7 +296,7 @@ export default async function Home({
           </div>
 
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <h2 className="text-2xl font-bold text-white mb-1">🔥 Trending This Week</h2>
+            <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2.5"><Flame className="text-purple-400 shrink-0" size={22} />Trending This Week</h2>
             <p className="text-gray-400 text-sm mb-6">vs. last week · min. 3 submissions</p>
             <TrendingDistros data={stats.trending} />
           </div>
@@ -288,7 +305,7 @@ export default async function Home({
         {/* Charts grid */}
         <div className="grid lg:grid-cols-2 gap-8 mb-8">
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <h2 className="text-3xl font-bold text-white mb-6">🏆 Top Distributions</h2>
+            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3"><Trophy className="text-purple-400 shrink-0" size={26} />Top Distributions</h2>
             {stats.totalSubmissions > 0
               ? <HorizontalBarChart linkBase="/distro" data={stats.topDistros.map(d => ({ label: d.distroName, count: d._count.distroName }))} />
               : <p className="text-gray-400 text-center py-16">No data for this filter</p>}
@@ -298,21 +315,21 @@ export default async function Home({
           </div>
 
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <h2 className="text-3xl font-bold text-white mb-6">🎨 Desktop Environments</h2>
+            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3"><Palette className="text-purple-400 shrink-0" size={26} />Desktop Environments</h2>
             {stats.totalSubmissions > 0
               ? <DesktopPieChart data={stats.topDesktops} />
               : <p className="text-gray-400 text-center py-16">No data for this filter</p>}
           </div>
 
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <h2 className="text-3xl font-bold text-white mb-6">🎯 Usage Types</h2>
+            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3"><Target className="text-purple-400 shrink-0" size={26} />Usage Types</h2>
             {stats.totalSubmissions > 0
               ? <UsagePieChart data={stats.usageStats} labels={usageLabels} />
               : <p className="text-gray-400 text-center py-16">No data for this filter</p>}
           </div>
 
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <h2 className="text-3xl font-bold text-white mb-6">⚡ Recent Submissions</h2>
+            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3"><Activity className="text-purple-400 shrink-0" size={26} />Recent Submissions</h2>
             <div className="space-y-4">
               {stats.recentSubmissions.map((sub, index) => (
                 <div
@@ -356,7 +373,7 @@ export default async function Home({
 
         {/* Hardware by distribution table */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
-          <h2 className="text-3xl font-bold text-white mb-6">🔧 Hardware by Distribution</h2>
+          <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3"><Cpu className="text-purple-400 shrink-0" size={26} />Hardware by Distribution</h2>
           {stats.perDistroHardware.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -409,7 +426,19 @@ export default async function Home({
             <p className="text-xl text-gray-300 mb-8">
               Submit your Linux setup and see how it compares
             </p>
-            <CopyBlock text="python3 distroinstall.py" />
+            <div className="max-w-xl mx-auto flex flex-col sm:flex-row gap-2">
+              <a
+                href="/distroinstall.py"
+                download
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-sm transition-colors whitespace-nowrap"
+              >
+                <Download size={16} />
+                Download script
+              </a>
+              <div className="flex-1 min-w-0">
+                <CopyBlock text="python3 distroinstall.py" />
+              </div>
+            </div>
           </div>
         </div>
 

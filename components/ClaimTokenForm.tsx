@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Link2 } from 'lucide-react'
 
 export function ClaimTokenForm() {
   const [token, setToken] = useState('')
@@ -34,7 +35,7 @@ export function ClaimTokenForm() {
 
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-      <h2 className="text-2xl font-bold text-white mb-2">🔗 Claim anonymous submissions</h2>
+      <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2.5"><Link2 className="text-purple-400 shrink-0" size={22} />Claim anonymous submissions</h2>
       <p className="text-gray-400 text-sm mb-6">
         If you ran the script before creating an account, enter your token to link those submissions here.
         Your token is saved in <code className="text-green-400">~/.distroinstall_token</code>.

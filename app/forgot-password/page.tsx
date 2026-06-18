@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Logo } from '@/components/Logo'
+import { Mail } from 'lucide-react'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -39,7 +40,9 @@ export default function ForgotPasswordPage() {
 
         {status === 'sent' ? (
           <div className="text-center">
-            <div className="text-4xl mb-3">📬</div>
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-300 mb-3">
+              <Mail size={26} />
+            </div>
             <h2 className="text-2xl font-bold text-white mb-2">Check your email</h2>
             <p className="text-gray-400 text-sm mb-8">
               If an account exists for <span className="text-gray-300">{email.trim()}</span>, you&apos;ll
