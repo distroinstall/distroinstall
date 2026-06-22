@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Search } from 'lucide-react'
 
@@ -8,6 +8,13 @@ type Distro = { name: string; count: number }
 
 export function DistroIndex({ distros }: { distros: Distro[] }) {
   const [query, setQuery] = useState('')
+
+  // Seed the search from a ?q= param (e.g. Google's sitelinks search box),
+  // read client-side so the page itself stays statically cacheable.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('q')
+    if (q) setQuery(q)
+  }, [])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()

@@ -1,7 +1,8 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { ArrowLeft, Users, HardDrive, Cpu, Database, ExternalLink, Package, Palette, Target, Monitor, Layers, Activity } from 'lucide-react'
+import { Users, HardDrive, Cpu, Database, ExternalLink, Package, Palette, Target, Monitor, Layers, Activity, HelpCircle, ChevronDown, GitCompare } from 'lucide-react'
 import { HorizontalBarChart, DesktopPieChart, UsagePieChart } from '@/components/Charts'
 import { getDistroMeta } from '@/lib/distros'
 
@@ -11,6 +12,55 @@ const usageLabels: Record<string, string> = {
   gaming: 'Gaming',
   server: 'Server',
   other: 'Other',
+}
+
+// Regenerate each page at most every 10 minutes instead of rendering on every
+// request — faster responses and friendlier to crawl budget.
+export const revalidate = 600
+
+// Opt into the static/ISR path. Returning [] prerenders nothing at build (some
+// distro names contain "/", which can't be a single dynamic segment), but each
+// page is then generated on first visit and cached for `revalidate` seconds.
+export async function generateStaticParams() {
+  return []
+}
+
+function distroSeoDescription(name: string, count: number): string {
+  return `Real hardware stats from ${count} ${name} submission${count !== 1 ? 's' : ''} on DistroInstall: popular desktop environments, kernels, GPUs, average RAM and CPU, plus how people use it.`
+}
+
+// "Based on" metadata uses short names (e.g. "Debian") but the DB may store a
+// longer one ("Debian GNU/Linux"). Resolve to the real distro page if one
+// exists, so we can link straight to it instead of a search.
+async function resolveBasedOnDistro(term: string): Promise<string | null> {
+  const rows = await prisma.submission.groupBy({
+    by: ['distroName'],
+    where: { distroName: { startsWith: term, mode: 'insensitive' } },
+    _count: { distroName: true },
+    orderBy: { _count: { distroName: 'desc' } },
+    take: 1,
+  })
+  return rows[0]?.distroName ?? null
+}
+
+export async function generateMetadata({ params }: { params: { name: string } }): Promise<Metadata> {
+  const distroName = decodeURIComponent(params.name)
+  const url = `https://distroinstall.com/distro/${encodeURIComponent(distroName)}`
+  const count = await prisma.submission.count({ where: { distroName } })
+
+  if (count === 0) {
+    return { title: `${distroName} — DistroInstall`, alternates: { canonical: url } }
+  }
+
+  const title = `${distroName}: hardware, desktops & kernels — DistroInstall`
+  const description = distroSeoDescription(distroName, count)
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, type: 'website' },
+    twitter: { card: 'summary_large_image', title, description },
+  }
 }
 
 async function getDistroStats(name: string) {
@@ -119,20 +169,103 @@ export default async function DistroPage({ params }: { params: { name: string } 
   const physical = stats.virtualVsPhysical.find(v => !v.isVirtual)?._count.isVirtual ?? 0
   const virtual_ = stats.virtualVsPhysical.find(v => v.isVirtual)?._count.isVirtual ?? 0
   const meta = getDistroMeta(distroName)
+  const basedOnSlug = meta?.basedOn ? await resolveBasedOnDistro(meta.basedOn) : null
+
+  // Derive a crawlable, unique-per-distro text summary + FAQ from the live data.
+  const total = stats.totalSubmissions
+  const pct = (n: number) => Math.round((n / total) * 100)
+  const usageLabel = (u: string) => (usageLabels[u] ?? u).toLowerCase()
+  const topDesktop = stats.desktopStats[0]
+  const secondDesktop = stats.desktopStats[1]
+  const topKernel = stats.kernelStats[0]
+  const topGpu = stats.gpuStats[0]
+  const topUsage = [...stats.usageStats].sort((a, b) => b._count.usageType - a._count.usageType)[0]
+
+  const summary: string[] = [
+    `Based on ${total} community submission${total !== 1 ? 's' : ''}, here is what a typical ${distroName} setup looks like.`,
+  ]
+  if (topDesktop) summary.push(`The most common desktop environment is ${topDesktop.desktopEnv} (${pct(topDesktop._count.desktopEnv)}% of submissions)${secondDesktop ? `, followed by ${secondDesktop.desktopEnv}` : ''}.`)
+  if (topKernel) summary.push(`The most reported Linux kernel is ${topKernel.kernel}.`)
+  if (stats.avgRam != null) summary.push(`${distroName} machines have ${stats.avgRam.toFixed(1)} GB of RAM${stats.avgCpuCores != null ? ` and ${stats.avgCpuCores.toFixed(0)} CPU cores` : ''} on average.`)
+  if (topGpu) summary.push(`The most frequently reported GPU is ${topGpu.gpu}.`)
+  if (topUsage) summary.push(`Most people run ${distroName} for ${usageLabel(topUsage.usageType)} use.`)
+  summary.push(`${physical} of these run on physical hardware and ${virtual_} in a virtual machine.`)
+
+  const faqs: { q: string; a: string }[] = []
+  if (topDesktop) faqs.push({
+    q: `What is the most popular desktop environment on ${distroName}?`,
+    a: `${topDesktop.desktopEnv} is the most popular desktop on ${distroName}, used in ${pct(topDesktop._count.desktopEnv)}% of its ${total} submissions${secondDesktop ? `, ahead of ${secondDesktop.desktopEnv}` : ''}.`,
+  })
+  if (stats.avgRam != null) faqs.push({
+    q: `How much RAM do ${distroName} users have?`,
+    a: `On average, ${distroName} machines have ${stats.avgRam.toFixed(1)} GB of RAM, based on ${total} community submission${total !== 1 ? 's' : ''}.`,
+  })
+  if (topKernel) faqs.push({
+    q: `Which Linux kernel is most common on ${distroName}?`,
+    a: `The most frequently reported kernel on ${distroName} is ${topKernel.kernel}.`,
+  })
+  if (topUsage) faqs.push({
+    q: `What do people use ${distroName} for?`,
+    a: `Most ${distroName} users run it for ${usageLabel(topUsage.usageType)} use.`,
+  })
+  faqs.push({
+    q: `Is ${distroName} used more on real hardware or in virtual machines?`,
+    a: `Of ${total} submission${total !== 1 ? 's' : ''}, ${physical} run on physical machines and ${virtual_} run in a virtual machine.`,
+  })
+  if (topGpu) faqs.push({
+    q: `What GPU is most common with ${distroName}?`,
+    a: `${topGpu.gpu} is the most frequently reported GPU among ${distroName} users.`,
+  })
+
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(f => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  }
+
+  const pageUrl = `https://distroinstall.com/distro/${encodeURIComponent(distroName)}`
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://distroinstall.com' },
+        { '@type': 'ListItem', position: 2, name: 'Distributions', item: 'https://distroinstall.com/distros' },
+        { '@type': 'ListItem', position: 3, name: distroName, item: pageUrl },
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Dataset',
+      name: `${distroName} hardware and usage statistics`,
+      description: meta
+        ? `${meta.description} ${distroSeoDescription(distroName, stats.totalSubmissions)}`
+        : distroSeoDescription(distroName, stats.totalSubmissions),
+      url: pageUrl,
+      isAccessibleForFree: true,
+      creator: { '@type': 'Organization', name: 'DistroInstall', url: 'https://distroinstall.com' },
+    },
+    ...(faqs.length > 0 ? [faqJsonLd] : []),
+  ]
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="container mx-auto px-4 py-12">
 
         {/* Back + header */}
         <div className="mb-10">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6"
-          >
-            <ArrowLeft size={18} />
-            Back to all distros
-          </Link>
+          <nav className="flex flex-wrap items-center gap-2 text-sm text-gray-400 mb-6" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+            <span className="text-gray-600">/</span>
+            <Link href="/distros" className="hover:text-white transition-colors">Distributions</Link>
+            <span className="text-gray-600">/</span>
+            <span className="text-gray-300">{distroName}</span>
+          </nav>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-2 break-words">{distroName}</h1>
           <p className="text-xl text-gray-400">
             {stats.totalSubmissions} submission{stats.totalSubmissions !== 1 ? 's' : ''} from the community
@@ -144,9 +277,12 @@ export default async function DistroPage({ params }: { params: { name: string } 
           <div className="flex items-start justify-between gap-4 flex-wrap mb-3">
             <h2 className="text-2xl font-bold text-white">About {distroName}</h2>
             {meta?.basedOn && (
-              <span className="text-xs px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30">
+              <Link
+                href={basedOnSlug ? `/distro/${encodeURIComponent(basedOnSlug)}` : `/distros?q=${encodeURIComponent(meta.basedOn)}`}
+                className="text-xs px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30 hover:bg-purple-500/30 transition-colors"
+              >
                 Based on {meta.basedOn}
-              </span>
+              </Link>
             )}
           </div>
           <p className="text-gray-300 leading-relaxed mb-5">
@@ -154,15 +290,24 @@ export default async function DistroPage({ params }: { params: { name: string } 
               ? meta.description
               : `${distroName} is a community-submitted Linux distribution. We don't have a curated description for it yet.`}
           </p>
-          <a
-            href={meta ? meta.url : `https://duckduckgo.com/?q=${encodeURIComponent(distroName + ' linux distribution')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg border border-white/20 transition-colors"
-          >
-            <ExternalLink size={15} />
-            {meta ? 'Visit official website' : `Search for ${distroName}`}
-          </a>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href={meta ? meta.url : `https://duckduckgo.com/?q=${encodeURIComponent(distroName + ' linux distribution')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg border border-white/20 transition-colors"
+            >
+              <ExternalLink size={15} />
+              {meta ? 'Visit official website' : `Search for ${distroName}`}
+            </a>
+            <Link
+              href="/compare"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg border border-white/20 transition-colors"
+            >
+              <GitCompare size={15} />
+              Compare distributions
+            </Link>
+          </div>
         </div>
 
         {/* Summary cards */}
@@ -212,6 +357,12 @@ export default async function DistroPage({ params }: { params: { name: string } 
               </div>
             </div>
           </div>
+        </div>
+
+        {/* At a glance — text summary (unique, crawlable content per distro) */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-10">
+          <h2 className="text-2xl font-bold text-white mb-4">{distroName} at a glance</h2>
+          <p className="text-gray-300 leading-relaxed">{summary.join(' ')}</p>
         </div>
 
         {/* Charts grid */}
@@ -267,6 +418,24 @@ export default async function DistroPage({ params }: { params: { name: string } 
               yAxisWidth={160}
               data={stats.kernelStats.map(k => ({ label: k.kernel, count: k._count.kernel }))}
             />
+          </div>
+        )}
+
+        {/* FAQ — data-driven, with FAQPage structured data */}
+        {faqs.length > 0 && (
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2.5"><HelpCircle className="text-purple-400 shrink-0" size={22} />Frequently asked questions</h2>
+            <div className="divide-y divide-white/10">
+              {faqs.map((f, i) => (
+                <details key={i} className="group py-3 first:pt-0 last:pb-0">
+                  <summary className="flex items-center justify-between gap-3 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-white font-medium hover:text-purple-300 transition-colors">
+                    <h3 className="text-base font-medium">{f.q}</h3>
+                    <ChevronDown size={18} className="text-gray-400 shrink-0 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <p className="text-gray-400 text-sm leading-relaxed mt-2">{f.a}</p>
+                </details>
+              ))}
+            </div>
           </div>
         )}
 
@@ -328,5 +497,3 @@ export default async function DistroPage({ params }: { params: { name: string } 
     </main>
   )
 }
-
-export const dynamic = 'force-dynamic'

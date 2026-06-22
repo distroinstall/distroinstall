@@ -169,6 +169,35 @@ export default async function Home({
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([
+            {
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'DistroInstall',
+              url: 'https://distroinstall.com',
+              description: 'Real hardware and software stats from real Linux users.',
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: {
+                  '@type': 'EntryPoint',
+                  urlTemplate: 'https://distroinstall.com/distros?q={search_term_string}',
+                },
+                'query-input': 'required name=search_term_string',
+              },
+            },
+            {
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'DistroInstall',
+              url: 'https://distroinstall.com',
+              logo: 'https://distroinstall.com/icon.svg',
+            },
+          ]),
+        }}
+      />
       <div className="container mx-auto px-4 py-16">
 
         {/* Header */}
