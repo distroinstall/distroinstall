@@ -9,6 +9,7 @@ system with python3 (no pip, no virtualenv, no PEP 668 headaches).
 
 import json
 import os
+import sys
 import platform
 import subprocess
 import urllib.request
@@ -169,13 +170,19 @@ def get_system_info():
     }
 
 
-def send_to_api(data, token=None, is_virtual=None, usage_type=None):
-    payload = json.dumps({
+def build_payload(data, token=None, is_virtual=None, usage_type=None):
+    """The exact JSON body that gets POSTed. Used for both sending and --dry-run,
+    so the preview is guaranteed identical to what would be sent."""
+    return {
         'system_info': data,
         'token': token,
         'is_virtual': is_virtual,
         'usage_type': usage_type,
-    }).encode('utf-8')
+    }
+
+
+def send_to_api(data, token=None, is_virtual=None, usage_type=None):
+    payload = json.dumps(build_payload(data, token, is_virtual, usage_type)).encode('utf-8')
     req = urllib.request.Request(
         API_URL, data=payload,
         headers={'Content-Type': 'application/json'}, method='POST',
@@ -190,8 +197,26 @@ def send_to_api(data, token=None, is_virtual=None, usage_type=None):
     return None
 
 
+def print_help():
+    print("Usage: python3 distroinstall.py [options]")
+    print()
+    print("Options:")
+    print("  --dry-run, -n   Collect your system info and print the EXACT JSON that")
+    print("                  would be sent, then exit WITHOUT sending anything.")
+    print("  --help, -h      Show this help and exit.")
+
+
 def main():
-    print(">_ DistroInstall - System Detector\n")
+    if '--help' in sys.argv or '-h' in sys.argv:
+        print_help()
+        return
+
+    dry_run = '--dry-run' in sys.argv or '-n' in sys.argv
+
+    print(">_ DistroInstall - System Detector")
+    if dry_run:
+        print("   DRY RUN: this is a preview. Nothing will be sent.")
+    print()
 
     default_vm = detect_virtual()  # True / False / None (unknown)
     if default_vm is None:
@@ -234,6 +259,21 @@ def main():
     print(f"  CPU:     {system_info['cpu']} ({system_info['cpu_cores']} cores / {system_info['cpu_threads']} threads)")
     print(f"  RAM:     {system_info['ram_gb']} GB")
     print(f"  GPU:     {system_info['gpu']}")
+
+    if dry_run:
+        payload = build_payload(system_info, token, is_virtual, usage_type)
+        # Mask the token in the preview so the output is safe to share publicly;
+        # the real token is still what gets sent on an actual run.
+        display = dict(payload)
+        if token:
+            display['token'] = token[:8] + '... (hidden in preview; sent unchanged)'
+        print("\n==> Dry run: this is the EXACT JSON that would be POSTed to")
+        print(f"    {API_URL}\n")
+        print(json.dumps(display, indent=2))
+        print("\n[dry-run] Nothing was sent. Re-run without --dry-run to submit.")
+        if token:
+            print("Your token is masked above, so this output is safe to share.")
+        return
 
     confirm = input("\nSend this data? (Y/n): ").strip().lower()
     if confirm == 'n':

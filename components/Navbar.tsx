@@ -47,8 +47,10 @@ export function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-3">
-            <Link href="/how-it-works" className="text-gray-400 hover:text-white text-sm transition-colors">How it works</Link>
+            <Link href="/submit" className="text-white hover:text-purple-300 text-sm font-medium transition-colors">Submit</Link>
+            <Link href="/distros" className="text-gray-400 hover:text-white text-sm transition-colors">Distros</Link>
             <Link href="/compare" className="text-gray-400 hover:text-white text-sm transition-colors">Compare</Link>
+            <Link href="/how-it-works" className="text-gray-400 hover:text-white text-sm transition-colors">How it works</Link>
             <Link href="/contact" className="text-gray-400 hover:text-white text-sm transition-colors">Contact</Link>
             <a
               href={GITHUB_URL}
@@ -122,8 +124,10 @@ export function Navbar() {
                   <div className="my-1 border-t border-white/10" />
                 </>
               )}
-              <MobileLink href="/how-it-works" onClick={closeMenu}>How it works</MobileLink>
+              <MobileLink href="/submit" onClick={closeMenu}>Submit</MobileLink>
+              <MobileLink href="/distros" onClick={closeMenu}>Distros</MobileLink>
               <MobileLink href="/compare" onClick={closeMenu}>Compare</MobileLink>
+              <MobileLink href="/how-it-works" onClick={closeMenu}>How it works</MobileLink>
               <MobileLink href="/contact" onClick={closeMenu}>Contact</MobileLink>
               <a
                 href={GITHUB_URL}

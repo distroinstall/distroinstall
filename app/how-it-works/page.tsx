@@ -111,6 +111,15 @@ export default function HowItWorksPage() {
               View source on GitHub
             </a>
           </div>
+
+          <div className="mt-5 pt-5 border-t border-blue-400/20">
+            <p className="text-gray-300 text-sm mb-3">
+              Want to see <em>exactly</em> what would be sent about your machine, without
+              sending anything? Run it with <code className="text-green-300 bg-white/10 px-1.5 py-0.5 rounded">--dry-run</code> —
+              it prints the precise JSON payload and exits. Nothing leaves your computer.
+            </p>
+            <CopyBlock text="python3 distroinstall.py --dry-run" />
+          </div>
         </div>
 
         {/* What we collect / don't */}
@@ -162,7 +171,9 @@ export default function HowItWorksPage() {
           <h2 className="text-2xl font-bold text-white mb-4">Prefer not to run the script? Use the API</h2>
           <p className="text-gray-300 leading-relaxed mb-4">
             It&apos;s just a JSON <code className="text-green-300 bg-white/10 px-1.5 py-0.5 rounded">POST</code> over
-            HTTPS. Gather the fields with whatever tools you trust and send them yourself — no need to run our script:
+            HTTPS. Gather the fields with whatever tools you trust and send them yourself — no need to run our script.
+            Or skip the terminal entirely and{' '}
+            <Link href="/submit" className="text-blue-400 hover:underline">fill in the web form</Link>:
           </p>
           <pre className="bg-black/40 border border-white/10 rounded-xl p-4 overflow-x-auto text-sm text-gray-200 leading-relaxed">
 {`curl -X POST https://distroinstall.com/api/submit \\

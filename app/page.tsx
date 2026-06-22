@@ -225,7 +225,11 @@ export default async function Home({
               <CopyBlock text="curl -sSL https://distroinstall.com/install.sh | bash" />
             </div>
 
-            <p className="text-gray-400 text-sm mt-4 text-center">
+            <p className="text-gray-400 text-sm mt-4 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+              <Link href="/submit" className="text-blue-400 hover:underline">
+                Prefer not to run anything? Submit by hand
+              </Link>
+              <span className="text-gray-600">·</span>
               <Link href="/how-it-works" className="text-blue-400 hover:underline">
                 What does it collect?
               </Link>
